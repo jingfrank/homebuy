@@ -500,9 +500,9 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
       </div>
 
       {/* Main Workspace List: SINGLE UNIFIED MASTER COMMUNITY CARDS (ZERO DUPLICATION) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {filteredCommunities.length === 0 ? (
-          <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div className="glass-card mobile-p-16" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
             未找到匹配的意向小区，点击右上角“+ 记录新小区”添加。
           </div>
         ) : (
@@ -520,9 +520,9 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
             return (
               <div
                 key={comm.id}
-                className="glass-card animate-fade-in"
+                className="glass-card animate-fade-in mobile-p-16"
                 style={{
-                  padding: '28px',
+                  padding: '22px',
                   background: '#ffffff',
                   borderLeft: isExpandedActive ? '6px solid var(--primary)' : '1px solid var(--border-color)',
                   boxShadow: isExpandedActive ? '0 10px 25px -5px rgba(5, 150, 105, 0.1)' : '0 2px 8px rgba(0,0,0,0.03)',
@@ -958,8 +958,8 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
 
       {/* Add or Edit Community Modal */}
       {(isAddingCommunity || isEditingCommunity) && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card animate-fade-in" style={{ maxWidth: '560px', width: '100%', maxHeight: '85vh', overflowY: 'auto', padding: '24px 28px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+        <div className="modal-overlay-mobile" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="glass-card animate-fade-in modal-card-mobile" style={{ maxWidth: '560px', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: '20px 22px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
@@ -1225,8 +1225,8 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
 
       {/* Add or Edit House Listing Modal */}
       {(isAddingListing || editingListingId !== null) && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card animate-fade-in" style={{ maxWidth: '560px', width: '100%', maxHeight: '85vh', overflowY: 'auto', padding: '24px 28px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+        <div className="modal-overlay-mobile" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="glass-card animate-fade-in modal-card-mobile" style={{ maxWidth: '560px', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: '20px 22px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>

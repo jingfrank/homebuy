@@ -163,23 +163,23 @@ export const MortgageCalculatorSection: React.FC = () => {
     : 999;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Top Banner */}
-      <div className="glass-card" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <CalculatorIcon color="var(--primary)" size={24} />
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)' }}>
+      <div className="glass-card mobile-p-16" style={{ padding: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+          <CalculatorIcon color="var(--primary)" size={22} />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)' }}>
             全能房贷试算与极端压力测试器
           </h2>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', lineHeight: 1.5 }}>
           从<strong>房屋总价 ➔ 首付比例 ➔ 公积金/商业组合贷款</strong>依次推算月供，并进行极端收入缩水压力测试。
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '20px' }}>
         {/* Left Inputs (REORDERED & RESTRUCTURED AS REQUESTED) */}
-        <div className="glass-card" style={{ padding: '24px' }}>
+        <div className="glass-card mobile-p-16" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '18px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
             1. 房屋总价与首付配置
           </h3>
@@ -306,10 +306,10 @@ export const MortgageCalculatorSection: React.FC = () => {
         </div>
 
         {/* Right Output Overview & Stress Test */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Repayment Summary Card */}
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div className="glass-card mobile-p-16" style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>
                 月供与还款汇总
               </h3>
@@ -318,12 +318,12 @@ export const MortgageCalculatorSection: React.FC = () => {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(99, 102, 241, 0.12)', padding: '16px', borderRadius: 'var(--radius-sm)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '12px', marginBottom: '14px' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.12)', padding: '14px', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   {repaymentType === 'equal_payment' ? '预估每月月供' : '预估首月月供'}
                 </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>
                   {totalMonthlyPayment.toLocaleString()} <span style={{ fontSize: '0.85rem' }}>元/月</span>
                 </div>
                 {repaymentType === 'equal_principal' ? (
@@ -337,9 +337,9 @@ export const MortgageCalculatorSection: React.FC = () => {
                 )}
               </div>
 
-              <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '16px', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '14px', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>支付利息总额</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--warning)' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--warning)' }}>
                   {totalInterestWuan} <span style={{ fontSize: '0.85rem' }}>万元</span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>
@@ -349,7 +349,7 @@ export const MortgageCalculatorSection: React.FC = () => {
             </div>
 
             {/* Interest Comparison Note */}
-            <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>
                 {repaymentType === 'equal_principal' ? (
                   <strong style={{ color: 'var(--success)' }}>
@@ -378,9 +378,9 @@ export const MortgageCalculatorSection: React.FC = () => {
 
           {/* Stress Test Simulator Card */}
           <div
-            className="glass-card"
+            className="glass-card mobile-p-16"
             style={{
-              padding: '24px',
+              padding: '20px',
               border: '1px solid rgba(220, 38, 38, 0.3)',
               background: 'linear-gradient(135deg, rgba(254, 242, 242, 0.95) 0%, #ffffff 100%)',
               boxShadow: '0 4px 16px rgba(220, 38, 38, 0.06)',
@@ -391,7 +391,7 @@ export const MortgageCalculatorSection: React.FC = () => {
               ⚡ 极端收入缩水压力测试
             </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '18px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '12px', marginBottom: '16px' }}>
               <div>
                 <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>家庭当前总月收入 (元/月)</label>
                 <input
@@ -423,7 +423,7 @@ export const MortgageCalculatorSection: React.FC = () => {
             </div>
 
             {/* Stress Test Outcomes */}
-            <div style={{ padding: '16px', background: '#ffffff', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+            <div style={{ padding: '14px', background: '#ffffff', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(220, 38, 38, 0.2)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.875rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>正常状态下月供收入比:</span>
                 <span style={{ fontWeight: 700, color: currentDTI <= 40 ? 'var(--success)' : 'var(--danger)' }}>{currentDTI}%</span>
@@ -446,6 +446,7 @@ export const MortgageCalculatorSection: React.FC = () => {
       {/* 360 Period Repayment Schedule Modal */}
       {isScheduleModalOpen && (
         <div
+          className="modal-overlay-mobile"
           style={{
             position: 'fixed',
             top: 0,
@@ -462,13 +463,13 @@ export const MortgageCalculatorSection: React.FC = () => {
           }}
         >
           <div
-            className="glass-card animate-fade-in"
+            className="glass-card animate-fade-in modal-card-mobile"
             style={{
               maxWidth: '900px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              padding: '28px',
+              padding: '24px',
               background: '#ffffff',
             }}
           >

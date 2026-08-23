@@ -125,26 +125,27 @@ export const HousingNotesSection: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Top Banner */}
       <div
-        className="glass-card"
+        className="glass-card mobile-p-16"
         style={{
-          padding: '24px',
+          padding: '20px',
           background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(248, 250, 252, 0.9) 100%)',
           borderLeft: '5px solid var(--primary)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
               <BookOpenIcon color="var(--primary)" size={24} />
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                📝 我的置业情报与看房随记 (Housing Intel & Field Notes)
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                置业情报与看房随手记
               </h2>
+              <span className="badge badge-primary">{notes.length} 条情报记录</span>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem' }}>
-              记录看房途中的底价口风、雨天防渗水实测、中介议价细节与轨交规划情报，打造专属置业大脑。
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', lineHeight: 1.5 }}>
+              随时随地记录看房踩坑实况、业主底价口风、中介私聊内幕与板块城市规划利好。
             </p>
           </div>
 
@@ -351,8 +352,8 @@ export const HousingNotesSection: React.FC = () => {
 
       {/* Add Note Modal */}
       {isAddModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card animate-fade-in" style={{ maxWidth: '560px', width: '100%', maxHeight: '85vh', overflowY: 'auto', padding: '24px 28px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+        <div className="modal-overlay-mobile" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="glass-card animate-fade-in modal-card-mobile" style={{ maxWidth: '560px', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: '20px 22px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>

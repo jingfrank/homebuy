@@ -74,7 +74,17 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         </div>
 
         {/* Navigation Tabs */}
-        <nav style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px' }}>
+        <nav
+          className="no-scrollbar"
+          style={{
+            display: 'flex',
+            gap: '8px',
+            overflowX: 'auto',
+            padding: '4px 2px',
+            maxWidth: '100%',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -83,14 +93,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 onClick={() => setActiveTab(tab.id as ActiveTab)}
                 className="btn"
                 style={{
-                  padding: '8px 16px',
+                  padding: '6px 14px',
                   borderRadius: '9999px',
-                  fontSize: '0.875rem',
+                  fontSize: '0.825rem',
                   fontWeight: isActive ? 700 : 500,
                   background: isActive ? 'var(--primary)' : '#f1f5f9',
                   color: isActive ? '#ffffff' : 'var(--text-muted)',
                   border: isActive ? '1px solid var(--primary)' : '1px solid var(--border-color)',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 {tab.label}

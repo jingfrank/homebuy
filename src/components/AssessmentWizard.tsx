@@ -66,12 +66,12 @@ export const AssessmentWizard: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Top Header Banner */}
       <div
-        className="glass-card"
+        className="glass-card mobile-p-16"
         style={{
-          padding: "28px",
+          padding: "24px",
           background:
             "linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)",
           borderLeft: "5px solid var(--primary)",
@@ -88,7 +88,7 @@ export const AssessmentWizard: React.FC = () => {
           <SparklesIcon color="var(--accent-cyan)" size={24} />
           <h2
             style={{
-              fontSize: "1.4rem",
+              fontSize: "1.3rem",
               fontWeight: 700,
               color: "var(--text-main)",
             }}
@@ -96,7 +96,7 @@ export const AssessmentWizard: React.FC = () => {
             智能买房时机多维度诊断系统
           </h2>
         </div>
-        <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.5 }}>
           结合您的财务安全防线、目标城市楼市供需周期、房贷利率及刚需迫切度，全方位测算“当下是否适合买房”。
         </p>
       </div>
@@ -104,12 +104,12 @@ export const AssessmentWizard: React.FC = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
-          gap: "28px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
+          gap: "24px",
         }}
       >
         {/* Left Column: Form Inputs */}
-        <div className="glass-card" style={{ padding: "28px" }}>
+        <div className="glass-card mobile-p-16" style={{ padding: "24px" }}>
           <h3
             style={{
               fontSize: "1.15rem",
@@ -757,7 +757,7 @@ export const AssessmentWizard: React.FC = () => {
       </div>
 
       {/* Action Plan & Key Risks Card */}
-      <div className="glass-card" style={{ padding: "28px" }}>
+      <div className="glass-card mobile-p-16" style={{ padding: "24px" }}>
         <div
           style={{
             display: "flex",

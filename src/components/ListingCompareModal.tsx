@@ -39,6 +39,7 @@ export const ListingCompareModal: React.FC<ListingCompareModalProps> = ({
 
   return (
     <div
+      className="modal-overlay-mobile"
       style={{
         position: 'fixed',
         top: 0,
@@ -51,39 +52,39 @@ export const ListingCompareModal: React.FC<ListingCompareModalProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '20px',
+        padding: '16px',
       }}
     >
       <div
-        className="glass-card animate-fade-in"
+        className="glass-card animate-fade-in modal-card-mobile"
         style={{
           maxWidth: '1100px',
           width: '100%',
-          maxHeight: '90vh',
+          maxHeight: '92vh',
           overflowY: 'auto',
-          padding: '28px',
+          padding: '20px 22px',
           background: '#ffffff',
           position: 'relative',
         }}
       >
         {/* Header Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid var(--border-color)', paddingBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '2px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <SparklesIcon color="var(--primary)" size={24} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <SparklesIcon color="var(--primary)" size={22} />
               多房源横向多维度 PK 对比表
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              并排对比 {items.length} 套精选房源的真实净租金收益率、容积率、车位配比、风险折价与流动性。
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              并排对比 {items.length} 套精选房源（支持左右横向滑动查看全部房源与维度）。
             </p>
           </div>
-          <button className="btn btn-secondary" onClick={onClose} style={{ padding: '6px 16px', borderRadius: '20px' }}>
+          <button className="btn btn-secondary" onClick={onClose} style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem' }}>
             ✕ 关闭对比
           </button>
         </div>
 
         {/* Side-by-Side Comparison Matrix */}
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--border-color)', background: '#f8fafc' }}>
