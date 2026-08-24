@@ -6,9 +6,10 @@ export type ActiveTab = 'wizard' | 'rent_vs_buy' | 'mortgage' | 'market' | 'chec
 interface NavbarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+  onLogout?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogout }) => {
   const tabs = [
     { id: 'wizard', label: '🧭 智能买房诊断', icon: HomeIcon },
     { id: 'market', label: '🌆 上海板块行情地图', icon: BuildingIcon },
@@ -109,6 +110,28 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             );
           })}
         </nav>
+
+        {/* Logout button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="btn"
+            title="退出登录"
+            style={{
+              padding: '6px 12px',
+              borderRadius: '9999px',
+              fontSize: '0.8rem',
+              fontWeight: 500,
+              background: '#f1f5f9',
+              color: 'var(--text-muted)',
+              border: '1px solid var(--border-color)',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            🔓 退出
+          </button>
+        )}
       </div>
     </header>
   );

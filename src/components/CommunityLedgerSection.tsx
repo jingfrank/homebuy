@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Community, HouseListing, RentSample } from '../types/community';
 import {
   computeListingMetrics,
@@ -7,9 +7,13 @@ import {
 } from '../types/community';
 import {
   getStoredCommunities,
-  saveCommunities,
+  addCommunity,
+  updateCommunity,
+  deleteCommunity,
   getStoredListings,
-  saveListings,
+  addListing,
+  updateListing,
+  deleteListing,
   DEFAULT_FLOORPLAN_SVG,
 } from '../utils/communityStorage';
 import { ListingCompareModal } from './ListingCompareModal';
@@ -28,15 +32,26 @@ interface CommunityLedgerSectionProps {
 export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
   onSelectListingForMortgage,
 }) => {
-  const [communities, setCommunities] = useState<Community[]>(() => getStoredCommunities());
-  const [listings, setListings] = useState<HouseListing[]>(() => getStoredListings());
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [listings, setListings] = useState<HouseListing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getStoredCommunities(), getStoredListings()])
+      .then(([comms, lists]) => {
+        setCommunities(comms);
+        setListings(lists);
+        if (comms.length > 0) setActiveCommunityId(comms[0].id);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [selectedDistrict, setSelectedDistrict] = useState<string>('全上海');
   const [communitySearch, setCommunitySearch] = useState<string>('');
 
-  const [activeCommunityId, setActiveCommunityId] = useState<string>(
-    communities.length > 0 ? communities[0].id : ''
-  );
+  const [activeCommunityId, setActiveCommunityId] = useState<string>('');
 
   // Pagination & View Mode State
   const [listingPage, setListingPage] = useState<number>(1);
@@ -138,14 +153,13 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
   const handleDeleteCommunity = (commId: string, commName: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (confirm(`确认要删除小区“${commName}”及其旗下所有的具体房源记录吗？`)) {
+      deleteCommunity(commId).catch(console.error);
+
       const updatedCommunities = communities.filter((c) => c.id !== commId);
       const updatedListings = listings.filter((l) => l.communityId !== commId);
 
       setCommunities(updatedCommunities);
-      saveCommunities(updatedCommunities);
-
       setListings(updatedListings);
-      saveListings(updatedListings);
 
       if (activeCommunityId === commId) {
         setActiveCommunityId(updatedCommunities.length > 0 ? updatedCommunities[0].id : '');
@@ -244,8 +258,9 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
         return c;
       });
 
+      const updatedComm = updatedCommunities.find((c) => c.id === targetCommId)!;
+      updateCommunity(updatedComm).catch(console.error);
       setCommunities(updatedCommunities);
-      saveCommunities(updatedCommunities);
 
       // Force reference-level update for listings array to ensure all child listings re-render with updated community properties!
       const updatedListings = listings.map((l) => {
@@ -255,7 +270,6 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
         return l;
       });
       setListings(updatedListings);
-      saveListings(updatedListings);
 
       setIsEditingCommunity(false);
     } else {
@@ -282,9 +296,8 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
         avgRentUnitPricePerSqm: computedAvgRentUnit,
       };
 
-      const updated = [newComm, ...communities];
-      setCommunities(updated);
-      saveCommunities(updated);
+      addCommunity(newComm).catch(console.error);
+      setCommunities([newComm, ...communities]);
       setActiveCommunityId(newComm.id);
       setIsAddingCommunity(false);
     }
@@ -293,9 +306,8 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
   // Delete House Listing Handler
   const handleDeleteListing = (listingId: string) => {
     if (confirm('确认删除这套房源记录吗？')) {
-      const updated = listings.filter((l) => l.id !== listingId);
-      setListings(updated);
-      saveListings(updated);
+      deleteListing(listingId).catch(console.error);
+      setListings(listings.filter((l) => l.id !== listingId));
       setCompareListingsIds(compareListingsIds.filter((id) => id !== listingId));
     }
   };
@@ -348,8 +360,9 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
         return l;
       });
 
+      const updatedListing = updatedListings.find((l) => l.id === editingListingId)!;
+      updateListing(updatedListing).catch(console.error);
       setListings(updatedListings);
-      saveListings(updatedListings);
       setEditingListingId(null);
     } else {
       // Create new listing
@@ -381,9 +394,8 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
         hasSchoolPolicyRisk: !!listingFormData.hasSchoolPolicyRisk,
       };
 
-      const updated = [newListing, ...listings];
-      setListings(updated);
-      saveListings(updated);
+      addListing(newListing).catch(console.error);
+      setListings([newListing, ...listings]);
       setListingPage(1);
       setIsAddingListing(false);
     }
@@ -400,6 +412,14 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
       reader.readAsDataURL(file);
     }
   };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px', color: 'var(--text-muted)' }}>
+        ⏳ 加载小区与房源数据中...
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>

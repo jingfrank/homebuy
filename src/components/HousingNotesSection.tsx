@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { HousingNote, NoteCategory } from '../types/notes';
 import { CATEGORY_MAP } from '../types/notes';
-import { getStoredNotes, saveNotes } from '../utils/notesStorage';
+import { getStoredNotes, addNote, deleteNote } from '../utils/notesStorage';
 import { BookOpenIcon, SparklesIcon } from './Icons';
 
 export const HousingNotesSection: React.FC = () => {
-  const [notes, setNotes] = useState<HousingNote[]>(() => getStoredNotes());
+  const [notes, setNotes] = useState<HousingNote[]>([]);
+
+  useEffect(() => {
+    getStoredNotes().then(setNotes).catch(console.error);
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('全上海');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -91,9 +95,8 @@ export const HousingNotesSection: React.FC = () => {
       tags: newNote.tags || [],
     };
 
-    const updated = [created, ...notes];
-    setNotes(updated);
-    saveNotes(updated);
+    addNote(created).catch(console.error);
+    setNotes([created, ...notes]);
     setNotesPage(1);
     setIsAddModalOpen(false);
     setNewNote({
@@ -110,9 +113,8 @@ export const HousingNotesSection: React.FC = () => {
 
   const handleDeleteNote = (id: string) => {
     if (confirm('确认删除这条随记情报吗？')) {
-      const updated = notes.filter((n) => n.id !== id);
-      setNotes(updated);
-      saveNotes(updated);
+      deleteNote(id).catch(console.error);
+      setNotes(notes.filter((n) => n.id !== id));
     }
   };
 

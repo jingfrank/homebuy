@@ -1,15 +1,22 @@
 {
   "name": "prediction",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "node --experimental-sqlite --import tsx/esm server/index.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "tsc -b && vite build",
+    "build:server": "tsc -p tsconfig.server.json",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed": "node --experimental-sqlite --import tsx/esm server/seed.ts",
+    "start": "node --experimental-sqlite dist-server/server/index.js"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "hono": "^4.7.11",
     "lucide-react": "^1.28.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
@@ -19,7 +26,9 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "concurrently": "^9.1.2",
     "oxlint": "^1.75.0",
+    "tsx": "^4.19.4",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
   }

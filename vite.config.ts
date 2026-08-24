@@ -7,4 +7,13 @@ export default defineConfig({
   build: {
     cssMinify: false,
   },
+  server: {
+    proxy: {
+      // 开发时将 /api 请求转发到后端服务
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
 });
