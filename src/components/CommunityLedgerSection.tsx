@@ -1497,6 +1497,68 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
         </div>
       )}
 
+      {/* Floating Sticky PK Action Bar */}
+      {compareListingsIds.length > 0 && (
+        <aside
+          role="region"
+          aria-label="房源对比快捷栏"
+          className="animate-fade-in"
+          style={{
+            position: 'fixed',
+            bottom: '76px', // Above mobile tab bar or bottom of screen
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 150,
+            background: 'rgba(15, 23, 42, 0.92)',
+            color: '#ffffff',
+            padding: '8px 18px',
+            borderRadius: '9999px',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            maxWidth: '92vw',
+          }}
+        >
+          <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span aria-hidden="true">⚖️</span>
+            已选 <strong style={{ color: '#34d399' }}>{compareListingsIds.length}</strong> 套房源
+          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => setIsCompareModalOpen(true)}
+              className="btn btn-primary"
+              style={{
+                padding: '6px 14px',
+                fontSize: '0.825rem',
+                minHeight: '32px',
+                borderRadius: '9999px',
+                background: '#059669',
+              }}
+            >
+              🚀 立即对比 PK
+            </button>
+            <button
+              onClick={() => setCompareListingsIds([])}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#94a3b8',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                padding: '4px 8px',
+              }}
+            >
+              清空
+            </button>
+          </div>
+        </aside>
+      )}
+
       {/* Side-by-Side Comparison Modal */}
       {isCompareModalOpen && (
         <ListingCompareModal
