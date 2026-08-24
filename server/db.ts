@@ -4,11 +4,12 @@
  */
 import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+// 数据库统一落在项目根下的 data/ 目录。
+// 进程（pm2 / npm run seed / deploy.sh）均在项目根启动，故以 cwd 为基准，
+// 避免 tsx 跑源码（__dirname=server/）与编译产物（__dirname=dist-server/server/）路径不一致的问题。
+const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DB_PATH = path.join(DATA_DIR, 'app.db');
 
 // Ensure data directory exists
