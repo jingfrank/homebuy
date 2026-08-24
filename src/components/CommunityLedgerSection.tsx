@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { Community, HouseListing, RentSample } from '../types/community';
-import {
-  computeListingMetrics,
-  calculateCommunityAvgRentUnitPrice,
-  suggestMonthlyRentByCommunity,
-} from '../types/community';
+import type { Community, HouseListing } from '../types/community';
+import { computeListingMetrics, calculateCommunityAvgRentUnitPrice } from '../types/community';
 import {
   getStoredCommunities,
   addCommunity,
@@ -14,15 +10,14 @@ import {
   addListing,
   updateListing,
   deleteListing,
-  DEFAULT_FLOORPLAN_SVG,
 } from '../utils/communityStorage';
 import { ListingCompareModal } from './ListingCompareModal';
+import { CommunityFormModal } from './CommunityFormModal';
+import { ListingFormModal } from './ListingFormModal';
 import {
   BuildingIcon,
   SparklesIcon,
   TrendingUpIcon,
-  ZapIcon,
-  ShieldCheckIcon,
 } from './Icons';
 
 interface CommunityLedgerSectionProps {
@@ -64,64 +59,11 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
   // Community Form Modal State (Add & Edit)
   const [isAddingCommunity, setIsAddingCommunity] = useState<boolean>(false);
   const [isEditingCommunity, setIsEditingCommunity] = useState<boolean>(false);
-
-  const [commFormData, setCommFormData] = useState<Partial<Community>>({
-    district: '浦东新区',
-    sector: '',
-    ringLocation: '中外环',
-    name: '',
-    builtYear: 2010,
-    propertyFee: 3.0,
-    metroInfoText: '',
-    schoolInfo: '',
-    amenities: '',
-    pros: [],
-    cons: [],
-    plotRatio: 1.8,
-    parkingRatio: '1:1.1',
-    parkingRentMonthly: 400,
-    askingAvgUnitPriceYuan: undefined,
-    dealAvgUnitPriceYuan: undefined,
-    rentSamples: [],
-    avgRentUnitPricePerSqm: 0,
-  });
-
-  // Temporary state for adding a single rent sample in the community modal
-  const [sampleAreaInput, setSampleAreaInput] = useState<string>('');
-  const [sampleRentInput, setSampleRentInput] = useState<string>('');
-  const [sampleLayoutInput, setSampleLayoutInput] = useState<string>('');
-  const [sampleNoteInput, setSampleNoteInput] = useState<string>('');
-  const [sampleIsShengxinZuInput, setSampleIsShengxinZuInput] = useState<boolean>(false);
+  const [commFormData, setCommFormData] = useState<Partial<Community>>({});
 
   // House Listing Form Modal State (Add & Edit)
   const [isAddingListing, setIsAddingListing] = useState<boolean>(false);
   const [editingListingId, setEditingListingId] = useState<string | null>(null);
-
-  const [listingFormData, setListingFormData] = useState<Partial<HouseListing>>({
-    unitNumber: '',
-    totalPrice: 400,
-    targetPrice: 370,
-    buildingArea: 89,
-    insideArea: 75,
-    layout: '3室2厅1卫',
-    floorInfo: '中层 (10/18)',
-    orientation: '南北通透',
-    renovation: '精装',
-    expectedMonthlyRent: 4500,
-    floorplanUrl: DEFAULT_FLOORPLAN_SVG,
-    rating: 5,
-    notes: '',
-    hasParkingSpace: false,
-    parkingPriceWuan: 0,
-    isSubNew: true,
-    isNearMetro: true,
-    isSweetSpotLayout: true,
-    hasAgeRisk: false,
-    hasLayoutNoiseRisk: false,
-    hasParkingPropertyRisk: false,
-    hasMetroDistanceRisk: false,
-    hasSchoolPolicyRisk: false,
-  });
 
   const districts = ['全上海', '浦东新区', '黄浦区', '徐汇区', '静安区', '长宁区', '闵行区', '青浦区', '松江区', '嘉定区', '宝山区'];
 
@@ -170,135 +112,23 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
   // Open Edit Community Modal
   const handleOpenEditCommunity = (comm: Community, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setCommFormData({ ...comm, rentSamples: comm.rentSamples ? [...comm.rentSamples] : [] });
-    setSampleAreaInput('');
-    setSampleRentInput('');
-    setSampleLayoutInput('');
-    setSampleNoteInput('');
-    setSampleIsShengxinZuInput(false);
+    setCommFormData({ ...comm });
     setIsEditingCommunity(true);
   };
 
-  // Add a rent sample to commFormData
-  const handleAddRentSample = () => {
-    const area = parseFloat(sampleAreaInput);
-    const rent = parseFloat(sampleRentInput);
-    if (!area || area <= 0 || !rent || rent <= 0) {
-      alert('请填写有效的租赁面积（㎡）和月租金（元/月）！');
-      return;
-    }
-    const newSample: RentSample = {
-      id: `rs-${Date.now()}`,
-      area,
-      monthlyRent: rent,
-      layout: sampleLayoutInput.trim() || undefined,
-      note: sampleNoteInput.trim() || undefined,
-      isShengxinZu: sampleIsShengxinZuInput,
-    };
-    const updatedSamples = [...(commFormData.rentSamples || []), newSample];
-    const newAvgUnitRent = calculateCommunityAvgRentUnitPrice(updatedSamples);
-    setCommFormData({
-      ...commFormData,
-      rentSamples: updatedSamples,
-      avgRentUnitPricePerSqm: newAvgUnitRent,
-    });
-    setSampleAreaInput('');
-    setSampleRentInput('');
-    setSampleLayoutInput('');
-    setSampleNoteInput('');
-    setSampleIsShengxinZuInput(false);
-  };
-
-  // Delete a rent sample from commFormData
-  const handleDeleteRentSample = (sampleId: string) => {
-    const updatedSamples = (commFormData.rentSamples || []).filter((s) => s.id !== sampleId);
-    const newAvgUnitRent = calculateCommunityAvgRentUnitPrice(updatedSamples);
-    setCommFormData({
-      ...commFormData,
-      rentSamples: updatedSamples,
-      avgRentUnitPricePerSqm: newAvgUnitRent,
-    });
-  };
-
-  // Save Community Form (Add or Edit with 100% LISTINGS DATA SYNC)
-  const handleSaveCommunityForm = () => {
-    if (!commFormData.name || !commFormData.sector) {
-      alert('请填写小区名称和所属板块！');
-      return;
-    }
-
-    const currentRentSamples = commFormData.rentSamples || [];
-    const computedAvgRentUnit = calculateCommunityAvgRentUnitPrice(currentRentSamples);
-
-    if (isEditingCommunity && commFormData.id) {
-      const targetCommId = commFormData.id;
-      // Update existing community
-      const updatedCommunities = communities.map((c) => {
-        if (c.id === targetCommId) {
-          return {
-            ...c,
-            name: commFormData.name || c.name,
-            district: commFormData.district || c.district,
-            sector: commFormData.sector || c.sector,
-            ringLocation: commFormData.ringLocation || c.ringLocation,
-            builtYear: Number(commFormData.builtYear) || c.builtYear,
-            propertyFee: Number(commFormData.propertyFee) || c.propertyFee,
-            metroInfoText: commFormData.metroInfoText || '',
-            schoolInfo: commFormData.schoolInfo || '',
-            amenities: commFormData.amenities || '',
-            plotRatio: Number(commFormData.plotRatio) || 1.8,
-            parkingRatio: commFormData.parkingRatio || '1:1.0',
-            parkingRentMonthly: Number(commFormData.parkingRentMonthly) || 400,
-            askingAvgUnitPriceYuan: commFormData.askingAvgUnitPriceYuan ? Number(commFormData.askingAvgUnitPriceYuan) : undefined,
-            dealAvgUnitPriceYuan: commFormData.dealAvgUnitPriceYuan ? Number(commFormData.dealAvgUnitPriceYuan) : undefined,
-            rentSamples: currentRentSamples,
-            avgRentUnitPricePerSqm: computedAvgRentUnit,
-          };
-        }
-        return c;
-      });
-
-      const updatedComm = updatedCommunities.find((c) => c.id === targetCommId)!;
-      updateCommunity(updatedComm).catch(console.error);
+  // Direct Community Save (Add or Update)
+  const handleSaveCommunityDirect = (comm: Community) => {
+    if (isEditingCommunity) {
+      updateCommunity(comm).catch(console.error);
+      const updatedCommunities = communities.map((c) => (c.id === comm.id ? comm : c));
       setCommunities(updatedCommunities);
-
-      // Force reference-level update for listings array to ensure all child listings re-render with updated community properties!
-      const updatedListings = listings.map((l) => {
-        if (l.communityId === targetCommId) {
-          return { ...l }; // clone object to trigger React re-calculation
-        }
-        return l;
-      });
+      const updatedListings = listings.map((l) => (l.communityId === comm.id ? { ...l } : l));
       setListings(updatedListings);
-
       setIsEditingCommunity(false);
     } else {
-      // Add new community
-      const newComm: Community = {
-        id: `comm-${Date.now()}`,
-        name: commFormData.name,
-        district: commFormData.district || '浦东新区',
-        sector: commFormData.sector,
-        ringLocation: commFormData.ringLocation || '中外环',
-        builtYear: Number(commFormData.builtYear) || 2010,
-        propertyFee: Number(commFormData.propertyFee) || 3.0,
-        metroInfoText: commFormData.metroInfoText || '',
-        schoolInfo: commFormData.schoolInfo || '',
-        amenities: commFormData.amenities || '',
-        pros: commFormData.pros || [],
-        cons: commFormData.cons || [],
-        plotRatio: Number(commFormData.plotRatio) || 1.8,
-        parkingRatio: commFormData.parkingRatio || '1:1.0',
-        parkingRentMonthly: Number(commFormData.parkingRentMonthly) || 400,
-        askingAvgUnitPriceYuan: commFormData.askingAvgUnitPriceYuan ? Number(commFormData.askingAvgUnitPriceYuan) : undefined,
-        dealAvgUnitPriceYuan: commFormData.dealAvgUnitPriceYuan ? Number(commFormData.dealAvgUnitPriceYuan) : undefined,
-        rentSamples: currentRentSamples,
-        avgRentUnitPricePerSqm: computedAvgRentUnit,
-      };
-
-      addCommunity(newComm).catch(console.error);
-      setCommunities([newComm, ...communities]);
-      setActiveCommunityId(newComm.id);
+      addCommunity(comm).catch(console.error);
+      setCommunities([comm, ...communities]);
+      setActiveCommunityId(comm.id);
       setIsAddingCommunity(false);
     }
   };
@@ -315,101 +145,20 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
   // Open Edit Listing Modal
   const handleOpenEditListing = (listing: HouseListing) => {
     setEditingListingId(listing.id);
-    setListingFormData({ ...listing });
   };
 
-  // Add or Update house listing handler
-  const handleSaveListingForm = () => {
-    if (!activeCommunity) return;
-    if (!listingFormData.unitNumber || !listingFormData.totalPrice) {
-      alert('请填写房源门牌号和挂牌总价！');
-      return;
-    }
-
+  // Direct Listing Save (Add or Update)
+  const handleSaveListingDirect = (listing: HouseListing) => {
     if (editingListingId) {
-      // Update existing listing
-      const updatedListings = listings.map((l) => {
-        if (l.id === editingListingId) {
-          return {
-            ...l,
-            unitNumber: listingFormData.unitNumber || l.unitNumber,
-            totalPrice: Number(listingFormData.totalPrice) || 0,
-            targetPrice: Number(listingFormData.targetPrice) || Number(listingFormData.totalPrice) || 0,
-            buildingArea: Number(listingFormData.buildingArea) || 0,
-            insideArea: Number(listingFormData.insideArea) || 0,
-            layout: listingFormData.layout || '3室2厅1卫',
-            floorInfo: listingFormData.floorInfo || '中层',
-            orientation: listingFormData.orientation || '南',
-            renovation: listingFormData.renovation || '精装',
-            expectedMonthlyRent: Number(listingFormData.expectedMonthlyRent) || 0,
-            floorplanUrl: listingFormData.floorplanUrl || DEFAULT_FLOORPLAN_SVG,
-            rating: Number(listingFormData.rating) || 5,
-            notes: listingFormData.notes || '',
-            hasParkingSpace: !!listingFormData.hasParkingSpace,
-            parkingPriceWuan: Number(listingFormData.parkingPriceWuan) || 0,
-            isSubNew: !!listingFormData.isSubNew,
-            isNearMetro: !!listingFormData.isNearMetro,
-            isSweetSpotLayout: !!listingFormData.isSweetSpotLayout,
-            hasAgeRisk: !!listingFormData.hasAgeRisk,
-            hasLayoutNoiseRisk: !!listingFormData.hasLayoutNoiseRisk,
-            hasParkingPropertyRisk: !!listingFormData.hasParkingPropertyRisk,
-            hasMetroDistanceRisk: !!listingFormData.hasMetroDistanceRisk,
-            hasSchoolPolicyRisk: !!listingFormData.hasSchoolPolicyRisk,
-          };
-        }
-        return l;
-      });
-
-      const updatedListing = updatedListings.find((l) => l.id === editingListingId)!;
-      updateListing(updatedListing).catch(console.error);
+      updateListing(listing).catch(console.error);
+      const updatedListings = listings.map((l) => (l.id === listing.id ? listing : l));
       setListings(updatedListings);
       setEditingListingId(null);
     } else {
-      // Create new listing
-      const newListing: HouseListing = {
-        id: `list-${Date.now()}`,
-        communityId: activeCommunity.id,
-        unitNumber: listingFormData.unitNumber,
-        totalPrice: Number(listingFormData.totalPrice) || 0,
-        targetPrice: Number(listingFormData.targetPrice) || Number(listingFormData.totalPrice) || 0,
-        buildingArea: Number(listingFormData.buildingArea) || 0,
-        insideArea: Number(listingFormData.insideArea) || Number(listingFormData.buildingArea) * 0.8 || 0,
-        layout: listingFormData.layout || '3室2厅1卫',
-        floorInfo: listingFormData.floorInfo || '中层',
-        orientation: listingFormData.orientation || '南',
-        renovation: listingFormData.renovation || '精装',
-        expectedMonthlyRent: Number(listingFormData.expectedMonthlyRent) || 0,
-        floorplanUrl: listingFormData.floorplanUrl || DEFAULT_FLOORPLAN_SVG,
-        rating: Number(listingFormData.rating) || 5,
-        notes: listingFormData.notes || '',
-        hasParkingSpace: !!listingFormData.hasParkingSpace,
-        parkingPriceWuan: Number(listingFormData.parkingPriceWuan) || 0,
-        isSubNew: !!listingFormData.isSubNew,
-        isNearMetro: !!listingFormData.isNearMetro,
-        isSweetSpotLayout: !!listingFormData.isSweetSpotLayout,
-        hasAgeRisk: !!listingFormData.hasAgeRisk,
-        hasLayoutNoiseRisk: !!listingFormData.hasLayoutNoiseRisk,
-        hasParkingPropertyRisk: !!listingFormData.hasParkingPropertyRisk,
-        hasMetroDistanceRisk: !!listingFormData.hasMetroDistanceRisk,
-        hasSchoolPolicyRisk: !!listingFormData.hasSchoolPolicyRisk,
-      };
-
-      addListing(newListing).catch(console.error);
-      setListings([newListing, ...listings]);
+      addListing(listing).catch(console.error);
+      setListings([listing, ...listings]);
       setListingPage(1);
       setIsAddingListing(false);
-    }
-  };
-
-  // Image Upload Handler
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setListingFormData((prev) => ({ ...prev, floorplanUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -449,24 +198,8 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
             <button
               className="btn btn-secondary"
               onClick={() => {
-                setCommFormData({
-                  district: '浦东新区',
-                  sector: '',
-                  ringLocation: '中外环',
-                  name: '',
-                  builtYear: 2010,
-                  propertyFee: 3.0,
-                  metroInfoText: '',
-                  schoolInfo: '',
-                  amenities: '',
-                  pros: [],
-                  cons: [],
-                  plotRatio: 1.8,
-                  parkingRatio: '1:1.1',
-                  parkingRentMonthly: 400,
-                  askingAvgUnitPriceYuan: undefined,
-                  dealAvgUnitPriceYuan: undefined,
-                });
+                setCommFormData({});
+                setIsEditingCommunity(false);
                 setIsAddingCommunity(true);
               }}
             >
@@ -624,31 +357,6 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                       onClick={() => {
                         setActiveCommunityId(comm.id);
                         setEditingListingId(null);
-                        setListingFormData({
-                          unitNumber: '',
-                          totalPrice: 400,
-                          targetPrice: 370,
-                          buildingArea: 89,
-                          insideArea: 75,
-                          layout: '3室2厅1卫',
-                          floorInfo: '中层 (10/18)',
-                          orientation: '南北通透',
-                          renovation: '精装',
-                          expectedMonthlyRent: 4500,
-                          floorplanUrl: DEFAULT_FLOORPLAN_SVG,
-                          rating: 5,
-                          notes: '',
-                          hasParkingSpace: false,
-                          parkingPriceWuan: 0,
-                          isSubNew: true,
-                          isNearMetro: true,
-                          isSweetSpotLayout: true,
-                          hasAgeRisk: false,
-                          hasLayoutNoiseRisk: false,
-                          hasParkingPropertyRisk: false,
-                          hasMetroDistanceRisk: false,
-                          hasSchoolPolicyRisk: false,
-                        });
                         setIsAddingListing(true);
                       }}
                     >
@@ -977,525 +685,29 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
       </div>
 
       {/* Add or Edit Community Modal */}
-      {(isAddingCommunity || isEditingCommunity) && (
-        <div className="modal-overlay-mobile" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card animate-fade-in modal-card-mobile" style={{ maxWidth: '560px', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: '20px 22px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                  {isEditingCommunity ? '✏️ 修改小区档案信息' : '🏢 录入新意向小区'}
-                </h3>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>录入/修改小区板块、容积率、车位比与配套</div>
-              </div>
-              <button
-                onClick={() => {
-                  setIsAddingCommunity(false);
-                  setIsEditingCommunity(false);
-                }}
-                style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>小区名称 *</label>
-                <input type="text" placeholder="如：联洋年华 / 泗水和鸣" value={commFormData.name} onChange={(e) => setCommFormData({ ...commFormData, name: e.target.value })} />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>所属行政区</label>
-                  <select value={commFormData.district} onChange={(e) => setCommFormData({ ...commFormData, district: e.target.value })}>
-                    {districts.filter(d => d !== '全上海').map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>所属板块 *</label>
-                  <input type="text" placeholder="如：泗泾板块" value={commFormData.sector} onChange={(e) => setCommFormData({ ...commFormData, sector: e.target.value })} />
-                </div>
-              </div>
-
-              {/* Plot Ratio & Parking Ratio Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>容积率</label>
-                  <input type="number" step="0.1" placeholder="1.8" value={commFormData.plotRatio} onChange={(e) => setCommFormData({ ...commFormData, plotRatio: parseFloat(e.target.value) || 1.8 })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>车位配比</label>
-                  <input type="text" placeholder="1:1.2" value={commFormData.parkingRatio} onChange={(e) => setCommFormData({ ...commFormData, parkingRatio: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>车位月租 (元/月)</label>
-                  <input type="number" placeholder="400" value={commFormData.parkingRentMonthly} onChange={(e) => setCommFormData({ ...commFormData, parkingRentMonthly: parseFloat(e.target.value) || 0 })} />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>环线定位</label>
-                  <select value={commFormData.ringLocation} onChange={(e) => setCommFormData({ ...commFormData, ringLocation: e.target.value })}>
-                    <option value="内环内">内环内</option>
-                    <option value="中内环">中内环</option>
-                    <option value="中外环">中外环</option>
-                    <option value="外环外">外环外</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>建筑年代 (年)</label>
-                  <input type="number" placeholder="2018" value={commFormData.builtYear} onChange={(e) => setCommFormData({ ...commFormData, builtYear: parseInt(e.target.value) || 2010 })} />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>物业费 (元/㎡/月)</label>
-                <input type="number" step="0.1" placeholder="3.5" value={commFormData.propertyFee} onChange={(e) => setCommFormData({ ...commFormData, propertyFee: parseFloat(e.target.value) || 0 })} />
-              </div>
-
-              {/* Market Avg Price Inputs */}
-              <div style={{ background: '#f0fdf4', padding: '12px 14px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46', marginBottom: '10px' }}>📊 市场价格锚点 (可选·用于计算房源溢价率)</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div>
-                    <label style={{ fontSize: '0.775rem', fontWeight: 700, color: '#047857', marginBottom: '3px', display: 'block' }}>最新挂牌均价 (元/㎡)</label>
-                    <input
-                      type="number"
-                      placeholder="如：82000"
-                      value={commFormData.askingAvgUnitPriceYuan ?? ''}
-                      onChange={(e) => setCommFormData({ ...commFormData, askingAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.775rem', fontWeight: 700, color: '#047857', marginBottom: '3px', display: 'block' }}>最近成交均价 (元/㎡)</label>
-                    <input
-                      type="number"
-                      placeholder="如：74000"
-                      value={commFormData.dealAvgUnitPriceYuan ?? ''}
-                      onChange={(e) => setCommFormData({ ...commFormData, dealAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    />
-                  </div>
-                </div>
-                <div style={{ fontSize: '0.725rem', color: '#6b7280', marginTop: '6px' }}>💡 数据来源：链家/贝壳「小区成交记录」或安居客挂牌均价（建议每月更新）</div>
-              </div>
-
-              {/* Rent Sample Calculator Section */}
-              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🏷️ 小区租房样本库与单位单价计算器
-                  </div>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', background: 'rgba(5, 150, 105, 0.1)', padding: '3px 10px', borderRadius: '14px', border: '1px solid rgba(5, 150, 105, 0.2)' }}>
-                    平均单价: {calculateCommunityAvgRentUnitPrice(commFormData.rentSamples)} 元/㎡/月
-                  </span>
-                </div>
-                <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.4 }}>
-                  录入任意面积与月租金样本（支持同小区或邻近盘），系统自动推算该小区的租赁单价，用于房源租金智能推算。
-                </p>
-
-                {/* Refactored Clean 2-Row Form */}
-                <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <div>
-                      <label style={{ fontSize: '0.775rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '3px', display: 'block' }}>租赁面积 (㎡) *</label>
-                      <input
-                        type="number"
-                        placeholder="如 60"
-                        value={sampleAreaInput}
-                        onChange={(e) => setSampleAreaInput(e.target.value)}
-                        style={{ fontSize: '0.825rem', padding: '6px 10px' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.775rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '3px', display: 'block' }}>月租金 (元/月) *</label>
-                      <input
-                        type="number"
-                        placeholder="如 4200"
-                        value={sampleRentInput}
-                        onChange={(e) => setSampleRentInput(e.target.value)}
-                        style={{ fontSize: '0.825rem', padding: '6px 10px' }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <div>
-                      <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '3px', display: 'block' }}>户型 (可选)</label>
-                      <input
-                        type="text"
-                        placeholder="如 2室1厅"
-                        value={sampleLayoutInput}
-                        onChange={(e) => setSampleLayoutInput(e.target.value)}
-                        style={{ fontSize: '0.825rem', padding: '6px 10px' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '3px', display: 'block' }}>备注/来源 (可选)</label>
-                      <input
-                        type="text"
-                        placeholder="如 贝壳在租/中介打听"
-                        value={sampleNoteInput}
-                        onChange={(e) => setSampleNoteInput(e.target.value)}
-                        style={{ fontSize: '0.825rem', padding: '6px 10px' }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                      <input
-                        type="checkbox"
-                        checked={sampleIsShengxinZuInput}
-                        onChange={(e) => setSampleIsShengxinZuInput(e.target.checked)}
-                      />
-                      🏠 链家「省心租/托管」(自动按业主净到手 90% 折算)
-                    </label>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      style={{ padding: '5px 14px', fontSize: '0.8rem', fontWeight: 700 }}
-                      onClick={handleAddRentSample}
-                    >
-                      + 添加租房样本
-                    </button>
-                  </div>
-                </div>
-
-                {/* Sample List Display */}
-                {commFormData.rentSamples && commFormData.rentSamples.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
-                    {commFormData.rentSamples.map((sample) => {
-                      const netRent = sample.isShengxinZu ? (sample.monthlyRent * 0.90) : sample.monthlyRent;
-                      const unitRate = sample.area > 0 ? Math.round((netRent / sample.area) * 100) / 100 : 0;
-                      return (
-                        <div
-                          key={sample.id}
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            background: '#ffffff',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
-                            fontSize: '0.8rem',
-                          }}
-                        >
-                          <div>
-                            <strong>{sample.area} ㎡</strong> · <strong style={{ color: 'var(--primary)' }}>{sample.monthlyRent} 元/月</strong>
-                            {sample.isShengxinZu && (
-                              <span style={{ marginLeft: '6px', color: '#1d4ed8', background: '#dbeafe', padding: '1px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>
-                                🏠 省心租 (净到手约 {Math.round(netRent)}元)
-                              </span>
-                            )}
-                            <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>
-                              (折算净单价 <strong>{unitRate}</strong> 元/㎡/月)
-                            </span>
-                            {sample.layout && <span style={{ marginLeft: '6px', color: '#475569' }}>[{sample.layout}]</span>}
-                            {sample.note && <span style={{ marginLeft: '6px', color: '#64748b' }}>({sample.note})</span>}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRentSample(sample.id)}
-                            style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.85rem' }}
-                            title="删除样本"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '0.775rem', color: 'var(--text-dim)', fontStyle: 'italic', textAlign: 'center', padding: '8px', background: '#ffffff', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
-                    暂无租房样本，请在上方填写样本信息后点击“+ 添加租房样本”。
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>对口学区</label>
-                <input type="text" placeholder="如：泗泾实验学校（九年一贯制）" value={commFormData.schoolInfo} onChange={(e) => setCommFormData({ ...commFormData, schoolInfo: e.target.value })} />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', display: 'block' }}>轨交距离与公共交通</label>
-                <input type="text" placeholder="如：9号线泗泾站 350米" value={commFormData.metroInfoText} onChange={(e) => setCommFormData({ ...commFormData, metroInfoText: e.target.value })} />
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setIsAddingCommunity(false);
-                    setIsEditingCommunity(false);
-                  }}
-                >
-                  取消
-                </button>
-                <button className="btn btn-primary" onClick={handleSaveCommunityForm}>
-                  {isEditingCommunity ? '保存修改' : '保存小区'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CommunityFormModal
+        isOpen={isAddingCommunity || isEditingCommunity}
+        isEditing={isEditingCommunity}
+        communityData={commFormData}
+        districts={districts}
+        onSave={handleSaveCommunityDirect}
+        onClose={() => {
+          setIsAddingCommunity(false);
+          setIsEditingCommunity(false);
+        }}
+      />
 
       {/* Add or Edit House Listing Modal */}
-      {(isAddingListing || editingListingId !== null) && (
-        <div className="modal-overlay-mobile" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-card animate-fade-in modal-card-mobile" style={{ maxWidth: '560px', width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: '20px 22px', background: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                  {editingListingId ? '✏️ 修改房源信息' : '🏠 录入具体房源信息'}
-                </h3>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>当前小区：{activeCommunity?.name}</div>
-              </div>
-              <button
-                onClick={() => {
-                  setIsAddingListing(false);
-                  setEditingListingId(null);
-                }}
-                style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>栋号/门牌号 *</label>
-                <input
-                  type="text"
-                  placeholder="如：8号楼 1202室 (或 8号楼中层)"
-                  value={listingFormData.unitNumber}
-                  onChange={(e) => setListingFormData({ ...listingFormData, unitNumber: e.target.value })}
-                />
-                <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: '2px', display: 'block' }}>
-                  💡 提示：链家/贝壳 App 出于隐私默认隐藏门牌号，您可以填写如“8号楼中层”或直接询问带看中介。
-                </span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>户型格局</label>
-                  <input
-                    type="text"
-                    placeholder="如：3室2厅2卫"
-                    value={listingFormData.layout}
-                    onChange={(e) => setListingFormData({ ...listingFormData, layout: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>装修状况</label>
-                  <select
-                    value={listingFormData.renovation}
-                    onChange={(e) => setListingFormData({ ...listingFormData, renovation: e.target.value as any })}
-                  >
-                    <option value="精装">精装</option>
-                    <option value="简装">简装</option>
-                    <option value="毛坯">毛坯</option>
-                    <option value="老旧需重装">老旧需重装</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>挂牌总价 (万元) *</label>
-                  <input
-                    type="number"
-                    value={listingFormData.totalPrice}
-                    onChange={(e) => setListingFormData({ ...listingFormData, totalPrice: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>意向底价/心理价 (万元)</label>
-                  <input
-                    type="number"
-                    value={listingFormData.targetPrice}
-                    onChange={(e) => setListingFormData({ ...listingFormData, targetPrice: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>建筑面积 (㎡)</label>
-                  <input
-                    type="number"
-                    value={listingFormData.buildingArea}
-                    onChange={(e) => setListingFormData({ ...listingFormData, buildingArea: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>套内实用面积 (㎡)</label>
-                  <input
-                    type="number"
-                    value={listingFormData.insideArea}
-                    onChange={(e) => setListingFormData({ ...listingFormData, insideArea: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
-
-              {/* Parking Option Section */}
-              <div style={{ background: '#eff6ff', padding: '12px 14px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#1e40af', marginBottom: '8px' }}>
-                  🚗 产权车位与打包价格选项
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', alignItems: 'center' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.825rem', fontWeight: 600 }}>
-                    <input
-                      type="checkbox"
-                      checked={!!listingFormData.hasParkingSpace}
-                      onChange={(e) => setListingFormData({ ...listingFormData, hasParkingSpace: e.target.checked })}
-                    />
-                    买房包含/赠送产权车位
-                  </label>
-                  {listingFormData.hasParkingSpace && (
-                    <div>
-                      <label style={{ fontSize: '0.75rem', color: '#1e40af' }}>车位价值/打包价 (万元)</label>
-                      <input
-                        type="number"
-                        placeholder="25"
-                        value={listingFormData.parkingPriceWuan}
-                        onChange={(e) => setListingFormData({ ...listingFormData, parkingPriceWuan: parseFloat(e.target.value) || 0 })}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>同户型预估月租金 (元/月)</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const avgUnitRent = activeCommunity?.avgRentUnitPricePerSqm || calculateCommunityAvgRentUnitPrice(activeCommunity?.rentSamples);
-                        if (!avgUnitRent || avgUnitRent <= 0) {
-                          alert('当前小区尚未录入租房样本！请先在主页点击「✏️ 编辑小区」录入租房样本面积与租金。');
-                          return;
-                        }
-                        const suggested = suggestMonthlyRentByCommunity(listingFormData.buildingArea || 0, avgUnitRent);
-                        if (suggested > 0) {
-                          setListingFormData(prev => ({ ...prev, expectedMonthlyRent: suggested }));
-                        }
-                      }}
-                      style={{
-                        background: '#eff6ff',
-                        color: '#1d4ed8',
-                        border: '1px solid #93c5fd',
-                        borderRadius: '4px',
-                        fontSize: '0.725rem',
-                        padding: '1px 6px',
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                      }}
-                      title="根据小区租房样本加权单价智能推算建议月租金"
-                    >
-                      🤖 智能推算
-                    </button>
-                  </div>
-                  <input
-                    type="number"
-                    value={listingFormData.expectedMonthlyRent}
-                    onChange={(e) => setListingFormData({ ...listingFormData, expectedMonthlyRent: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>楼层 / 朝向</label>
-                  <input
-                    type="text"
-                    placeholder="如：中层(10/18) · 南"
-                    value={listingFormData.floorInfo}
-                    onChange={(e) => setListingFormData({ ...listingFormData, floorInfo: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Liquidity Checkboxes */}
-              <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ZapIcon size={16} color="var(--primary)" /> 流动性特征加分勾选
-                </div>
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '0.825rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={!!listingFormData.isSubNew} onChange={(e) => setListingFormData({ ...listingFormData, isSubNew: e.target.checked })} />
-                    品质次新房 (&lt;10年)
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={!!listingFormData.isNearMetro} onChange={(e) => setListingFormData({ ...listingFormData, isNearMetro: e.target.checked })} />
-                    正地铁房 (&lt;500米)
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={!!listingFormData.isSweetSpotLayout} onChange={(e) => setListingFormData({ ...listingFormData, isSweetSpotLayout: e.target.checked })} />
-                    黄金主力户型 (80-110㎡)
-                  </label>
-                </div>
-              </div>
-
-              {/* Risk Discount Checkboxes */}
-              <div style={{ background: '#fef2f2', padding: '12px 14px', borderRadius: '8px', border: '1px solid #fca5a5' }}>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#b91c1c', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ShieldCheckIcon size={16} color="#b91c1c" /> 瑕疵与风险折价因子勾选 (重算理性入手价)
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem', color: '#7f1d1d' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={!!listingFormData.hasAgeRisk} onChange={(e) => setListingFormData({ ...listingFormData, hasAgeRisk: e.target.checked })} />
-                    房龄&gt;20年 (-10%)
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={!!listingFormData.hasLayoutNoiseRisk} onChange={(e) => setListingFormData({ ...listingFormData, hasLayoutNoiseRisk: e.target.checked })} />
-                    顶底楼/临高架噪音 (-10%)
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={!!listingFormData.hasParkingPropertyRisk} onChange={(e) => setListingFormData({ ...listingFormData, hasParkingPropertyRisk: e.target.checked })} />
-                    车位紧张/物业差 (-6%)
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={!!listingFormData.hasMetroDistanceRisk} onChange={(e) => setListingFormData({ ...listingFormData, hasMetroDistanceRisk: e.target.checked })} />
-                    离轨交&gt;1.5km (-8%)
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', gridColumn: 'span 2' }}>
-                    <input type="checkbox" checked={!!listingFormData.hasSchoolPolicyRisk} onChange={(e) => setListingFormData({ ...listingFormData, hasSchoolPolicyRisk: e.target.checked })} />
-                    学区溢价剥离风险 (-15%)
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>上传/更新户型图照片</label>
-                <input type="file" accept="image/*" onChange={handleImageUpload} />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>看房随手记与评价</label>
-                <textarea rows={3} placeholder="记录采光、通风、噪音、业主卖房动机等..." value={listingFormData.notes} onChange={(e) => setListingFormData({ ...listingFormData, notes: e.target.value })} />
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '14px', borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setIsAddingListing(false);
-                    setEditingListingId(null);
-                  }}
-                >
-                  取消
-                </button>
-                <button className="btn btn-primary" onClick={handleSaveListingForm}>
-                  {editingListingId ? '保存修改' : '保存房源'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ListingFormModal
+        isOpen={isAddingListing || editingListingId !== null}
+        editingListing={editingListingId ? listings.find((l) => l.id === editingListingId) || null : null}
+        activeCommunity={activeCommunity}
+        onSave={handleSaveListingDirect}
+        onClose={() => {
+          setIsAddingListing(false);
+          setEditingListingId(null);
+        }}
+      />
 
       {/* Floating Sticky PK Action Bar */}
       {compareListingsIds.length > 0 && (
