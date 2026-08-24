@@ -23,52 +23,51 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
   onSave,
   onClose,
 }) => {
+  const [formData, setFormData] = useState<Partial<HouseListing>>({});
+  const [formError, setFormError] = useState<string>('');
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      if (editingListing) {
+        setFormData({ ...editingListing });
+      } else {
+        const avgRent = activeCommunity?.avgRentUnitPricePerSqm || calculateCommunityAvgRentUnitPrice(activeCommunity?.rentSamples) || 50;
+        const defaultRent = suggestMonthlyRentByCommunity(89, avgRent);
+        setFormData({
+          unitNumber: '',
+          totalPrice: 400,
+          targetPrice: 370,
+          buildingArea: 89,
+          insideArea: 75,
+          layout: '3室2厅1卫',
+          floorInfo: '中楼层 (8/18)',
+          orientation: '南北通透',
+          renovation: '精装',
+          expectedMonthlyRent: defaultRent,
+          floorplanUrl: DEFAULT_FLOORPLAN_SVG,
+          rating: 5,
+          notes: '',
+          hasParkingSpace: false,
+          parkingPriceWuan: 0,
+          isSubNew: true,
+          isNearMetro: true,
+          isSweetSpotLayout: true,
+          hasAgeRisk: false,
+          hasLayoutNoiseRisk: false,
+          hasParkingPropertyRisk: false,
+          hasMetroDistanceRisk: false,
+          hasSchoolPolicyRisk: false,
+        });
+      }
+      setFormError('');
       return () => {
         document.body.style.overflow = '';
       };
     }
-  }, [isOpen]);
+  }, [isOpen, editingListing, activeCommunity]);
 
   if (!isOpen) return null;
-
-  const [formData, setFormData] = useState<Partial<HouseListing>>(() => {
-    if (editingListing) {
-      return { ...editingListing };
-    }
-    const avgRent = activeCommunity?.avgRentUnitPricePerSqm || calculateCommunityAvgRentUnitPrice(activeCommunity?.rentSamples) || 50;
-    const defaultRent = suggestMonthlyRentByCommunity(89, avgRent);
-
-    return {
-      unitNumber: '',
-      totalPrice: 400,
-      targetPrice: 370,
-      buildingArea: 89,
-      insideArea: 75,
-      layout: '3室2厅1卫',
-      floorInfo: '中楼层 (8/18)',
-      orientation: '南北通透',
-      renovation: '精装',
-      expectedMonthlyRent: defaultRent,
-      floorplanUrl: DEFAULT_FLOORPLAN_SVG,
-      rating: 5,
-      notes: '',
-      hasParkingSpace: false,
-      parkingPriceWuan: 0,
-      isSubNew: true,
-      isNearMetro: true,
-      isSweetSpotLayout: true,
-      hasAgeRisk: false,
-      hasLayoutNoiseRisk: false,
-      hasParkingPropertyRisk: false,
-      hasMetroDistanceRisk: false,
-      hasSchoolPolicyRisk: false,
-    };
-  });
-
-  const [formError, setFormError] = useState<string>('');
 
   const buildingArea = formData.buildingArea || 0;
   const totalPrice = formData.totalPrice || 0;

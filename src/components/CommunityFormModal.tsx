@@ -27,51 +27,49 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
   onSave,
   onClose,
 }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = '';
-      };
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const [formData, setFormData] = useState<Partial<Community>>(() => ({
-    district: '浦东新区',
-    sector: '',
-    ringLocation: '中外环',
-    name: '',
-    builtYear: 2015,
-    propertyFee: 3.0,
-    propertyCompany: '',
-    metroInfoText: '',
-    schoolInfo: '',
-    amenities: '',
-    pros: [],
-    cons: [],
-    plotRatio: 1.8,
-    parkingRatio: '1:1.1',
-    parkingRentMonthly: 400,
-    askingAvgUnitPriceYuan: undefined,
-    dealAvgUnitPriceYuan: undefined,
-    rentSamples: [],
-    avgRentUnitPricePerSqm: 0,
-    ...communityData,
-  }));
-
+  const [formData, setFormData] = useState<Partial<Community>>({});
   const [formError, setFormError] = useState<string>('');
-
-  // Rent sample temporary state
-  const [showAdvancedRent, setShowAdvancedRent] = useState<boolean>(
-    Boolean(formData.rentSamples && formData.rentSamples.length > 0)
-  );
+  const [showAdvancedRent, setShowAdvancedRent] = useState<boolean>(false);
   const [sampleArea, setSampleArea] = useState<string>('');
   const [sampleRent, setSampleRent] = useState<string>('');
   const [sampleLayout, setSampleLayout] = useState<string>('');
   const [sampleNote, setSampleNote] = useState<string>('');
   const [sampleIsShengxinZu, setSampleIsShengxinZu] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      setFormData({
+        district: '浦东新区',
+        sector: '',
+        ringLocation: '中外环',
+        name: '',
+        builtYear: 2015,
+        propertyFee: 3.0,
+        propertyCompany: '',
+        metroInfoText: '',
+        schoolInfo: '',
+        amenities: '',
+        pros: [],
+        cons: [],
+        plotRatio: 1.8,
+        parkingRatio: '1:1.1',
+        parkingRentMonthly: 400,
+        askingAvgUnitPriceYuan: undefined,
+        dealAvgUnitPriceYuan: undefined,
+        rentSamples: [],
+        avgRentUnitPricePerSqm: 0,
+        ...communityData,
+      });
+      setShowAdvancedRent(Boolean(communityData?.rentSamples && communityData.rentSamples.length > 0));
+      setFormError('');
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen, communityData]);
+
+  if (!isOpen) return null;
 
   const handleAddSample = () => {
     const areaNum = parseFloat(sampleArea);
