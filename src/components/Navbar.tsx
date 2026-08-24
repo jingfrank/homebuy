@@ -27,10 +27,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
         top: 0,
         zIndex: 100,
         background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        backdropFilter: 'blur(16px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
         borderBottom: '1px solid var(--border-color)',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+        boxShadow: '0 2px 12px rgba(15, 23, 42, 0.03)',
       }}
     >
       <div
@@ -39,9 +39,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          minHeight: '72px',
-          paddingTop: '10px',
-          paddingBottom: '10px',
+          minHeight: '70px',
+          paddingTop: '8px',
+          paddingBottom: '8px',
           flexWrap: 'wrap',
           gap: '12px',
         }}
@@ -61,21 +61,24 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
               boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
               flexShrink: 0,
             }}
+            aria-hidden="true"
           >
             🏠
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-main)', lineHeight: 1.2 }}>
-              居安择时 <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>HomeBuy AI</span>
+            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-main)', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+              居安择时 <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>HomeBuy AI</span>
             </div>
             <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              个人买房最佳时机评估与智能决策系统
+              个人与家庭买房决策智能助手
             </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
         <nav
+          role="tablist"
+          aria-label="主要功能导航"
           className="no-scrollbar"
           style={{
             display: 'flex',
@@ -91,18 +94,22 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id as ActiveTab)}
                 className="btn"
                 style={{
-                  padding: '6px 14px',
+                  padding: '7px 15px',
                   borderRadius: '9999px',
-                  fontSize: '0.825rem',
+                  fontSize: '0.85rem',
                   fontWeight: isActive ? 700 : 500,
                   background: isActive ? 'var(--primary)' : '#f1f5f9',
                   color: isActive ? '#ffffff' : 'var(--text-muted)',
                   border: isActive ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                  boxShadow: isActive ? '0 2px 8px rgba(5, 150, 105, 0.25)' : 'none',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
+                  minHeight: '36px',
                 }}
               >
                 {tab.label}
@@ -115,21 +122,20 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
         {onLogout && (
           <button
             onClick={onLogout}
-            className="btn"
+            className="btn btn-secondary"
+            aria-label="退出登录"
             title="退出登录"
             style={{
-              padding: '6px 12px',
+              padding: '6px 14px',
               borderRadius: '9999px',
-              fontSize: '0.8rem',
-              fontWeight: 500,
-              background: '#f1f5f9',
-              color: 'var(--text-muted)',
-              border: '1px solid var(--border-color)',
+              fontSize: '0.825rem',
+              fontWeight: 600,
               whiteSpace: 'nowrap',
               flexShrink: 0,
+              minHeight: '36px',
             }}
           >
-            🔓 退出
+            <span aria-hidden="true">🔓</span> 退出
           </button>
         )}
       </div>
