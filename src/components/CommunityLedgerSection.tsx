@@ -252,16 +252,99 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
         </div>
       </div>
 
+      {/* Horizontal Community Selector Bar (Quick Switcher) */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          overflowX: 'auto',
+          paddingBottom: '4px',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+          意向小区：
+        </span>
+        {filteredCommunities.map((c) => {
+          const isSelected = activeCommunityId === c.id;
+          const count = listings.filter((l) => l.communityId === c.id).length;
+          return (
+            <button
+              key={c.id}
+              onClick={() => {
+                setActiveCommunityId(c.id);
+                setListingPage(1);
+              }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '10px',
+                fontSize: '0.825rem',
+                fontWeight: isSelected ? 800 : 500,
+                background: isSelected ? 'var(--primary)' : '#ffffff',
+                color: isSelected ? '#ffffff' : 'var(--text-main)',
+                border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: isSelected ? '0 4px 12px rgba(5, 150, 105, 0.2)' : '0 1px 3px rgba(0,0,0,0.03)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span>🏢 {c.name}</span>
+              <span
+                style={{
+                  fontSize: '0.725rem',
+                  padding: '1px 6px',
+                  borderRadius: '9999px',
+                  background: isSelected ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+                  color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                  fontWeight: 700,
+                }}
+              >
+                {count}套
+              </span>
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => {
+            setCommFormData({});
+            setIsEditingCommunity(false);
+            setIsAddingCommunity(true);
+          }}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '10px',
+            fontSize: '0.825rem',
+            fontWeight: 700,
+            background: 'var(--primary-light)',
+            color: 'var(--primary)',
+            border: '1px dashed var(--primary)',
+            whiteSpace: 'nowrap',
+            cursor: 'pointer',
+          }}
+        >
+          + 录入新小区
+        </button>
+      </div>
+
       {/* Main Workspace List: SINGLE UNIFIED MASTER COMMUNITY CARDS (ZERO DUPLICATION) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {filteredCommunities.length === 0 ? (
           <div className="glass-card mobile-p-16" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            未找到匹配的意向小区，点击右上角“+ 记录新小区”添加。
+            未找到匹配的意向小区，点击上方“+ 录入新小区”添加。
           </div>
         ) : (
           filteredCommunities.map((comm) => {
             const commListings = listings.filter((l) => l.communityId === comm.id);
-            const isExpandedActive = activeCommunityId === comm.id;
+            // Only show active community or all if active is empty
+            if (activeCommunityId && activeCommunityId !== comm.id) {
+              return null; // Focus mode: show only active selected community
+            }
 
             // Pagination calculations for this specific community
             const commTotalPages = Math.ceil(commListings.length / LISTINGS_PER_PAGE) || 1;
@@ -277,14 +360,15 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                 style={{
                   padding: '22px',
                   background: '#ffffff',
-                  borderLeft: isExpandedActive ? '6px solid var(--primary)' : '1px solid var(--border-color)',
-                  boxShadow: isExpandedActive ? '0 10px 25px -5px rgba(5, 150, 105, 0.1)' : '0 2px 8px rgba(0,0,0,0.03)',
+                  borderLeft: '6px solid var(--primary)',
+                  boxShadow: '0 10px 25px -5px rgba(5, 150, 105, 0.1)',
                 }}
               >
-                {/* Master Community Header & Information */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                {/* Master Community Header & Information WITH TOP-ROW ACTION BUTTONS */}
+                <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '18px' }}>
+                  {/* Top Row: Title + Status + PROMINENT ACTION BUTTONS */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
                         {comm.name}
                       </h3>
@@ -295,46 +379,81 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '8px', display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
-                      <span>🏢 容积率: <strong>{comm.plotRatio || '1.8'}</strong> ({comm.plotRatio && comm.plotRatio < 1.8 ? '低密舒适' : '品质适中'})</span>
-                      <span>🚗 车位比: <strong>{comm.parkingRatio || '1:1.0'}</strong> (月租约 {comm.parkingRentMonthly || 400}元)</span>
-                      <span>物业费: {comm.propertyFee}元/㎡/月</span>
-                      <span>建成年份: {comm.builtYear}年</span>
+                    {/* TOP ACTION BUTTONS: DIRECTLY REACHABLE ON CARD HEADER */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <button
+                        className="btn btn-primary"
+                        style={{ padding: '8px 16px', fontSize: '0.875rem', fontWeight: 700, borderRadius: '8px' }}
+                        onClick={() => {
+                          setActiveCommunityId(comm.id);
+                          setEditingListingId(null);
+                          setIsAddingListing(true);
+                        }}
+                      >
+                        ➕ 录入此小区房源
+                      </button>
+
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '8px 14px', fontSize: '0.85rem', borderRadius: '8px' }}
+                        onClick={(e) => handleOpenEditCommunity(comm, e)}
+                      >
+                        ✏️ 编辑小区
+                      </button>
+
+                      <button
+                        className="btn btn-secondary"
+                        style={{ color: 'var(--danger)', padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px' }}
+                        onClick={(e) => handleDeleteCommunity(comm.id, comm.name, e)}
+                        title="删除小区档案"
+                      >
+                        🗑️
+                      </button>
                     </div>
+                  </div>
 
-                    {/* Market Avg Price Row */}
-                    {(comm.askingAvgUnitPriceYuan || comm.dealAvgUnitPriceYuan || (comm.rentSamples && comm.rentSamples.length > 0)) && (
-                      <div style={{ marginTop: '8px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
-                        {comm.askingAvgUnitPriceYuan && (
-                          <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                            📈 挂牌均价: <strong style={{ color: 'var(--text-main)' }}>{comm.askingAvgUnitPriceYuan.toLocaleString()} 元/㎡</strong>
-                          </span>
-                        )}
-                        {comm.dealAvgUnitPriceYuan && (
-                          <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                            🤝 成交均价: <strong style={{ color: 'var(--primary)' }}>{comm.dealAvgUnitPriceYuan.toLocaleString()} 元/㎡</strong>
-                          </span>
-                        )}
-                        {comm.askingAvgUnitPriceYuan && comm.dealAvgUnitPriceYuan && (
-                          <span style={{ fontSize: '0.8rem', background: '#fef9c3', color: '#854d0e', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, border: '1px solid #fde047' }}>
-                            💡 挤水分空间: {Math.round(((comm.askingAvgUnitPriceYuan - comm.dealAvgUnitPriceYuan) / comm.askingAvgUnitPriceYuan) * 1000) / 10}%
-                            &nbsp;(约 {(comm.askingAvgUnitPriceYuan - comm.dealAvgUnitPriceYuan).toLocaleString()} 元/㎡)
-                          </span>
-                        )}
-                        {(comm.rentSamples && comm.rentSamples.length > 0) && (
-                          <span style={{ fontSize: '0.825rem', background: '#eff6ff', color: '#1d4ed8', padding: '2px 9px', borderRadius: '12px', fontWeight: 700, border: '1px solid #bfdbfe' }}>
-                            🏷️ 租赁单价: {calculateCommunityAvgRentUnitPrice(comm.rentSamples)} 元/㎡/月 ({comm.rentSamples.length}组样本加权)
-                          </span>
-                        )}
-                      </div>
-                    )}
+                  {/* Compact Community Key Metrics */}
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span>🏢 容积率: <strong>{comm.plotRatio || '1.8'}</strong></span>
+                    <span>🚗 车位比: <strong>{comm.parkingRatio || '1:1.0'}</strong> (月租约 {comm.parkingRentMonthly || 400}元)</span>
+                    <span>物业费: {comm.propertyFee}元/㎡/月</span>
+                    <span>建成年份: {comm.builtYear}年</span>
+                  </div>
 
-                    <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                      <div>🎓 对口学区：{comm.schoolInfo || '暂无学区信息'}</div>
-                      <div>🚇 轨交交通：{comm.metroInfoText || '暂无轨交信息'}</div>
+                  {/* Market Avg Price Row */}
+                  {(comm.askingAvgUnitPriceYuan || comm.dealAvgUnitPriceYuan || (comm.rentSamples && comm.rentSamples.length > 0)) && (
+                    <div style={{ marginTop: '8px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      {comm.askingAvgUnitPriceYuan && (
+                        <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+                          📈 挂牌均价: <strong style={{ color: 'var(--text-main)' }}>{comm.askingAvgUnitPriceYuan.toLocaleString()} 元/㎡</strong>
+                        </span>
+                      )}
+                      {comm.dealAvgUnitPriceYuan && (
+                        <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+                          🤝 成交均价: <strong style={{ color: 'var(--primary)' }}>{comm.dealAvgUnitPriceYuan.toLocaleString()} 元/㎡</strong>
+                        </span>
+                      )}
+                      {comm.askingAvgUnitPriceYuan && comm.dealAvgUnitPriceYuan && (
+                        <span style={{ fontSize: '0.8rem', background: '#fef9c3', color: '#854d0e', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, border: '1px solid #fde047' }}>
+                          💡 挤水分空间: {Math.round(((comm.askingAvgUnitPriceYuan - comm.dealAvgUnitPriceYuan) / comm.askingAvgUnitPriceYuan) * 1000) / 10}%
+                          &nbsp;(约 {(comm.askingAvgUnitPriceYuan - comm.dealAvgUnitPriceYuan).toLocaleString()} 元/㎡)
+                        </span>
+                      )}
+                      {(comm.rentSamples && comm.rentSamples.length > 0) && (
+                        <span style={{ fontSize: '0.825rem', background: '#eff6ff', color: '#1d4ed8', padding: '2px 9px', borderRadius: '12px', fontWeight: 700, border: '1px solid #bfdbfe' }}>
+                          🏷️ 租赁单价: {calculateCommunityAvgRentUnitPrice(comm.rentSamples)} 元/㎡/月 ({comm.rentSamples.length}组样本加权)
+                        </span>
+                      )}
                     </div>
+                  )}
 
-                    {/* Pros / Cons Tags */}
+                  <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <div>🎓 对口学区：{comm.schoolInfo || '暂无学区信息'}</div>
+                    <div>🚇 轨交交通：{comm.metroInfoText || '暂无轨交信息'}</div>
+                  </div>
+
+                  {/* Pros / Cons Tags */}
+                  {((comm.pros && comm.pros.length > 0) || (comm.cons && comm.cons.length > 0)) && (
                     <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
                       {comm.pros?.map((p, i) => (
                         <span key={i} className="badge badge-success" style={{ fontSize: '0.75rem' }}>
@@ -347,49 +466,36 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                         </span>
                       ))}
                     </div>
-                  </div>
-
-                  {/* UNIFIED ACTION BUTTON GROUP (DIRECTLY ON THE COMMUNITY CARD) */}
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <button
-                      className="btn btn-primary"
-                      style={{ padding: '6px 14px', fontSize: '0.85rem' }}
-                      onClick={() => {
-                        setActiveCommunityId(comm.id);
-                        setEditingListingId(null);
-                        setIsAddingListing(true);
-                      }}
-                    >
-                      + 录入此小区房源
-                    </button>
-
-                    <button
-                      className="btn btn-secondary"
-                      style={{ padding: '6px 12px', fontSize: '0.85rem' }}
-                      onClick={(e) => handleOpenEditCommunity(comm, e)}
-                    >
-                      ✏️ 编辑小区
-                    </button>
-
-                    <button
-                      className="btn btn-secondary"
-                      style={{ color: 'var(--danger)', padding: '6px 12px', fontSize: '0.85rem' }}
-                      onClick={(e) => handleDeleteCommunity(comm.id, comm.name, e)}
-                    >
-                      🗑️ 删除小区
-                    </button>
-                  </div>
+                  )}
                 </div>
 
-                {/* Sub-section: Listings Ledger inside this Community */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                      【{comm.name}】已录入房源 ({commListings.length}套)
-                    </h4>
+                {/* Sub-Header: Active Listing List with View Mode Switch */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>房源列表 ({commListings.length} 套)</span>
+                      <button
+                        onClick={() => {
+                          setActiveCommunityId(comm.id);
+                          setEditingListingId(null);
+                          setIsAddingListing(true);
+                        }}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          background: 'var(--primary-light)',
+                          color: 'var(--primary)',
+                          border: '1px solid rgba(5, 150, 105, 0.2)',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        + 快速加一套
+                      </button>
+                    </div>
 
-                    {/* View Toggle Buttons */}
-                    <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '3px', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', background: '#f1f5f9', padding: '2px', borderRadius: '8px' }}>
                       <button
                         onClick={() => setViewMode('card')}
                         style={{
@@ -404,7 +510,7 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                           cursor: 'pointer',
                         }}
                       >
-                        🖼️ 图文大卡模式
+                        🖼️ 图文大卡
                       </button>
                       <button
                         onClick={() => setViewMode('table')}
@@ -420,14 +526,30 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                           cursor: 'pointer',
                         }}
                       >
-                        📊 紧凑 Excel 表格
+                        📊 紧凑表格
                       </button>
                     </div>
                   </div>
 
                   {commListings.length === 0 ? (
-                    <div style={{ padding: '24px', textAlign: 'center', background: '#f8fafc', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                      当前小区暂未录入具体房源，点击上方“+ 录入此小区房源”添加。
+                    <div style={{ padding: '28px 20px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🏠</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
+                        当前小区尚未录入具体房源
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                        点击下方按钮录入第一套关注房源，系统将自动推算租金收益率与安全砍价值。
+                      </p>
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                          setActiveCommunityId(comm.id);
+                          setEditingListingId(null);
+                          setIsAddingListing(true);
+                        }}
+                      >
+                        ➕ 立即录入此小区第一套房源
+                      </button>
                     </div>
                   ) : viewMode === 'table' ? (
                     /* Compact Table View Mode */
@@ -496,7 +618,7 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                       </table>
                     </div>
                   ) : (
-                    /* Card View Mode */
+                    /* Card View Mode WITH TOP-ROW EDIT BUTTONS */
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {commPaginatedListings.map((listing) => {
                         const metrics = computeListingMetrics(listing, comm);
@@ -505,20 +627,22 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                           <div
                             key={listing.id}
                             style={{
-                              padding: '20px',
-                              borderRadius: '12px',
+                              padding: '18px 20px',
+                              borderRadius: '14px',
                               border: isChecked ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-                              background: '#f8fafc',
+                              background: '#ffffff',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                             }}
                           >
+                            {/* Listing Header Row with Direct Action Buttons at Top-Right */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', marginBottom: '14px' }}>
                               <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                   <input
                                     type="checkbox"
                                     checked={isChecked}
                                     onChange={() => toggleCompare(listing.id)}
-                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
                                   />
                                   <span style={{ fontWeight: 800, fontSize: '1.15rem', color: 'var(--text-main)' }}>
                                     {listing.unitNumber}
@@ -527,17 +651,17 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                                   <span className="badge badge-secondary">{listing.renovation}</span>
 
                                   {listing.hasParkingSpace && (
-                                    <span className="badge badge-success" style={{ fontSize: '0.775rem', fontWeight: 700 }}>
+                                    <span className="badge badge-success" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                                       🚗 含产权车位 {listing.parkingPriceWuan ? `(${listing.parkingPriceWuan}万)` : ''}
                                     </span>
                                   )}
 
-                                  <span className={`badge ${metrics.liquidityBadgeStyle}`} style={{ fontSize: '0.775rem', fontWeight: 700 }}>
+                                  <span className={`badge ${metrics.liquidityBadgeStyle}`} style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                                     {metrics.liquidityBadge} ({metrics.liquidityScore}分)
                                   </span>
 
                                   {metrics.totalRiskDiscountPct > 0 && (
-                                    <span className="badge badge-warning" style={{ fontSize: '0.775rem', fontWeight: 700 }}>
+                                    <span className="badge badge-warning" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                                       {metrics.riskDiscountBadge}
                                     </span>
                                   )}
@@ -546,47 +670,54 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                                 <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                                   {listing.buildingArea} ㎡ (套内 {listing.insideArea} ㎡，实得率 {metrics.practicalRatioPct}%) · {listing.orientation} · {listing.floorInfo}
                                 </div>
-
-                                <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                                  {metrics.liquidityTags.map((tag, idx) => (
-                                    <span key={idx} style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', background: '#ffffff', color: '#334155', border: '1px solid #cbd5e1' }}>
-                                      {tag}
-                                    </span>
-                                  ))}
-                                  {metrics.riskDiscountTags.map((rt, idx) => (
-                                    <span key={idx} style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', background: '#fef2f2', color: '#b91c1c', border: '1px solid #fca5a5' }}>
-                                      {rt}
-                                    </span>
-                                  ))}
-                                </div>
                               </div>
 
-                              <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                                  {listing.totalPrice} <span style={{ fontSize: '0.85rem' }}>万元</span>
+                              {/* TOP-RIGHT DIRECT ACTION BUTTONS & PRICE */}
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.75rem', padding: '4px 10px', color: 'var(--primary)', fontWeight: 700 }}
+                                    onClick={() => handleOpenEditListing(listing)}
+                                  >
+                                    ✏️ 编辑
+                                  </button>
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                                    onClick={() => {
+                                      if (onSelectListingForMortgage) {
+                                        onSelectListingForMortgage(listing.totalPrice);
+                                      }
+                                    }}
+                                  >
+                                    🧮 算房贷
+                                  </button>
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.75rem', padding: '4px 8px', color: 'var(--danger)' }}
+                                    onClick={() => handleDeleteListing(listing.id)}
+                                    title="删除房源"
+                                  >
+                                    🗑️
+                                  </button>
                                 </div>
-                                <div style={{ fontSize: '0.775rem', color: 'var(--primary)', fontWeight: 700 }}>
-                                  底价预估: {listing.targetPrice} 万元 (单价 {metrics.unitPriceYuan.toLocaleString()} 元/㎡)
+
+                                <div style={{ textAlign: 'right', marginTop: '2px' }}>
+                                  <span className="tabular-nums" style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                                    {listing.totalPrice} <span style={{ fontSize: '0.8rem' }}>万元</span>
+                                  </span>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700, marginLeft: '6px' }}>
+                                    (底价 {listing.targetPrice}万)
+                                  </span>
                                 </div>
-                                {metrics.totalRiskDiscountPct > 0 && (
-                                  <div style={{ fontSize: '0.775rem', color: 'var(--danger)', fontWeight: 800, marginTop: '2px' }}>
-                                    🛡️ 理性入手价: {metrics.rationalSafePriceWuan} 万元
-                                  </div>
-                                )}
-                                {metrics.priceVsDealAvgPct !== null && (
-                                  <div style={{ fontSize: '0.735rem', marginTop: '3px', fontWeight: 700, color: metrics.priceVsDealAvgPct > 10 ? '#b91c1c' : metrics.priceVsDealAvgPct < 0 ? '#059669' : '#92400e' }}>
-                                    {metrics.priceVsDealAvgPct > 10 ? '⚠️' : metrics.priceVsDealAvgPct < 0 ? '🔥' : '💡'}
-                                    {metrics.priceVsDealAvgPct > 0 ? `比近期成交均价高 ${metrics.priceVsDealAvgPct}%` : `比近期成交均价低 ${Math.abs(metrics.priceVsDealAvgPct)}%`}
-                                    {metrics.priceVsDealAvgPct > 10 ? ' (挂高·需大砍价)' : metrics.priceVsDealAvgPct < -3 ? ' (诚意卖·性价比高)' : ' (贴近市场真实底线)'}
-                                  </div>
-                                )}
                               </div>
                             </div>
 
                             {/* Floorplan & REAL NET RENT Metrics Grid */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                               {/* Floorplan Thumbnail */}
-                              <div style={{ width: '100%', height: '130px', background: '#ffffff', borderRadius: '8px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ width: '100%', height: '120px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 {listing.floorplanUrl ? (
                                   <img src={listing.floorplanUrl} alt="户型图" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                 ) : (
@@ -594,57 +725,43 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                                 )}
                               </div>
 
-                              {/* Net Rent Box */}
-                              <div style={{ background: '#ffffff', padding: '14px', borderRadius: '8px', border: '1px solid rgba(5, 150, 105, 0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
-                                <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {/* Net Rent & Valuation Box */}
+                              <div style={{ background: '#f0fdf4', padding: '12px 14px', borderRadius: '10px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '5px' }}>
+                                <div style={{ fontWeight: 800, color: '#047857', fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                   <TrendingUpIcon size={14} /> 真实净租金收益率 (Net Yield)
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem' }}>
-                                  <span style={{ color: 'var(--text-muted)' }}>到手月均净租金:</span>
-                                  <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{metrics.netMonthlyRentYuan} 元/月</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                                  <span style={{ color: '#065f46' }}>净到手月租金:</span>
+                                  <strong className="tabular-nums" style={{ color: 'var(--primary)' }}>{metrics.netMonthlyRentYuan} 元/月</strong>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem' }}>
-                                  <span style={{ color: 'var(--text-muted)' }}>真实年化净收益率:</span>
-                                  <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{metrics.netAnnualRentalYieldPct}%</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                                  <span style={{ color: '#065f46' }}>真实年化净收益率:</span>
+                                  <strong className="tabular-nums" style={{ color: 'var(--primary)' }}>{metrics.netAnnualRentalYieldPct}%</strong>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px' }}>
-                                  <span style={{ color: 'var(--text-muted)' }}>净租金对月供覆盖率:</span>
-                                  <span style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{metrics.mortgageCoveragePct}%</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.775rem', borderTop: '1px dashed #bbf7d0', paddingTop: '4px', marginTop: '2px' }}>
+                                  <span style={{ color: '#065f46' }}>建议安全砍价值:</span>
+                                  <strong className="tabular-nums" style={{ color: 'var(--danger)' }}>{metrics.rationalSafePriceWuan} 万元</strong>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Actions & Notes */}
-                            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                📝 备注：{listing.notes || '暂无说明'}
+                            {/* Tags and Notes */}
+                            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                              <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>
+                                📝 备注：{listing.notes || '暂无私聊备注'}
                               </div>
-                              <div style={{ display: 'flex', gap: '6px' }}>
-                                <button
-                                  className="btn btn-secondary"
-                                  style={{ fontSize: '0.775rem', padding: '3px 8px', color: 'var(--primary)' }}
-                                  onClick={() => handleOpenEditListing(listing)}
-                                >
-                                  ✏️ 编辑房源
-                                </button>
-                                <button
-                                  className="btn btn-secondary"
-                                  style={{ fontSize: '0.775rem', padding: '3px 8px', color: 'var(--danger)' }}
-                                  onClick={() => handleDeleteListing(listing.id)}
-                                >
-                                  🗑️ 删除
-                                </button>
-                                <button
-                                  className="btn btn-secondary"
-                                  style={{ fontSize: '0.775rem', padding: '3px 10px' }}
-                                  onClick={() => {
-                                    if (onSelectListingForMortgage) {
-                                      onSelectListingForMortgage(listing.totalPrice);
-                                    }
-                                  }}
-                                >
-                                  🧮 带入房贷计算器
-                                </button>
+
+                              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                {metrics.liquidityTags.map((tag, idx) => (
+                                  <span key={idx} style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}>
+                                    {tag}
+                                  </span>
+                                ))}
+                                {metrics.riskDiscountTags.map((rt, idx) => (
+                                  <span key={idx} style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', background: '#fef2f2', color: '#b91c1c', border: '1px solid #fca5a5' }}>
+                                    {rt}
+                                  </span>
+                                ))}
                               </div>
                             </div>
                           </div>
