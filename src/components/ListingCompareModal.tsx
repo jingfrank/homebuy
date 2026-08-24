@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Community, HouseListing } from '../types/community';
 import { computeListingMetrics } from '../types/community';
 
@@ -14,6 +14,13 @@ export const ListingCompareModal: React.FC<ListingCompareModalProps> = ({
   onClose,
 }) => {
   const [viewMode, setViewMode] = useState<'card' | 'matrix'>('card');
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   if (!selectedListings || selectedListings.length === 0) return null;
 

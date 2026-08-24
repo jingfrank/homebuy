@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Community, RentSample } from '../types/community';
 import { calculateCommunityAvgRentUnitPrice } from '../types/community';
 
@@ -27,6 +27,15 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
   onSave,
   onClose,
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const [formData, setFormData] = useState<Partial<Community>>(() => ({

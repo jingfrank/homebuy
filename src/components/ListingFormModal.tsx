@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { HouseListing, Community } from '../types/community';
 import { suggestMonthlyRentByCommunity, calculateCommunityAvgRentUnitPrice } from '../types/community';
 import { DEFAULT_FLOORPLAN_SVG } from '../utils/communityStorage';
@@ -23,6 +23,15 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
   onSave,
   onClose,
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const [formData, setFormData] = useState<Partial<HouseListing>>(() => {

@@ -296,25 +296,25 @@ input[type="range"] {
     border-radius: var(--radius-md);
   }
 
-  /* Bottom sheet modal drawer styling */
+  /* Mobile modal drawer & full-screen sheet styling */
   .modal-overlay-mobile {
     padding: 0 !important;
-    align-items: flex-end !important;
-    background: rgba(15, 23, 42, 0.45) !important;
+    align-items: stretch !important;
+    background: rgba(15, 23, 42, 0.6) !important;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
   }
 
   .modal-card-mobile {
     width: 100% !important;
-    max-height: 90vh !important;
-    border-top-left-radius: 20px !important;
-    border-top-right-radius: 20px !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-    padding: 24px 18px !important;
-    box-shadow: var(--shadow-drawer) !important;
-    animation: slideUpDrawer 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    animation: fadeIn 0.2s ease-out forwards !important;
   }
 }
 
