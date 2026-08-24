@@ -66,12 +66,11 @@ export const ListingCompareModal: React.FC<ListingCompareModalProps> = ({
       }}
     >
       <div
-        className="glass-card animate-fade-in modal-card-mobile"
+        className="glass-card animate-fade-in modal-card-mobile modal-scroll-body"
         style={{
           maxWidth: '1200px',
           width: '100%',
           maxHeight: '94vh',
-          overflowY: 'auto',
           padding: '24px',
           background: '#ffffff',
           borderRadius: '20px',

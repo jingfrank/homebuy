@@ -234,13 +234,12 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
         {/* Scrollable Form Body */}
         <form
           onSubmit={handleSubmit}
+          className="modal-scroll-body"
           style={{
-            padding: '20px 22px',
-            overflowY: 'auto',
+            padding: '20px 22px 100px 22px',
             display: 'flex',
             flexDirection: 'column',
             gap: '22px',
-            paddingBottom: '90px',
           }}
         >
           {formError && (

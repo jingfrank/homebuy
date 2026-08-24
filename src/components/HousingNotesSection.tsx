@@ -437,12 +437,11 @@ export const HousingNotesSection: React.FC = () => {
           }}
         >
           <div
-            className="glass-card animate-fade-in modal-card-mobile"
+            className="glass-card animate-fade-in modal-card-mobile modal-scroll-body"
             style={{
               maxWidth: '580px',
               width: '100%',
               maxHeight: '88vh',
-              overflowY: 'auto',
               padding: '24px',
               background: '#ffffff',
               borderRadius: '16px',
