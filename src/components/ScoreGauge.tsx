@@ -7,49 +7,49 @@ interface ScoreGaugeProps {
 }
 
 export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, signal, title }) => {
-  const radius = 70;
-  const strokeWidth = 12;
+  const radius = 68;
+  const strokeWidth = 10;
   const normalizedRadius = radius - strokeWidth / 2;
   const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const strokeDashoffset = circumference - (Math.min(100, Math.max(0, score)) / 100) * circumference;
 
-  let colorClass = 'var(--success)';
-  let bgGradient = 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 100%)';
+  let color = 'var(--primary)';
   let badgeText = '最佳入场窗口';
   let badgeStyle = 'badge-success';
+  let bannerDesc = '财务储备与安全边际充裕，当前楼市供需和利率支持适时出手。';
 
   if (signal === 'OBSERVE') {
-    colorClass = 'var(--warning)';
-    bgGradient = 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.05) 100%)';
+    color = 'var(--warning)';
     badgeText = '观望蓄力中';
     badgeStyle = 'badge-warning';
+    bannerDesc = '当前处于博弈观望期，建议保持现金流，持续关注板块降价笋盘。';
   } else if (signal === 'DEFER') {
-    colorClass = 'var(--danger)';
-    bgGradient = 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.05) 100%)';
+    color = 'var(--danger)';
     badgeText = '建议暂缓买房';
     badgeStyle = 'badge-danger';
+    bannerDesc = '月供压力或现金防线不足，强行上车存在断供风险，建议暂缓购房。';
   }
 
   return (
     <div
+      className="glass-card"
       style={{
-        background: bgGradient,
-        borderRadius: 'var(--radius-lg)',
         padding: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '16px',
       }}
     >
       <div style={{ position: 'relative', width: radius * 2, height: radius * 2 }}>
         <svg height={radius * 2} width={radius * 2} style={{ transform: 'rotate(-90deg)' }}>
           {/* Back Track */}
           <circle
-            stroke="rgba(255, 255, 255, 0.1)"
+            stroke="#f1f5f9"
             fill="transparent"
             strokeWidth={strokeWidth}
             r={normalizedRadius}
@@ -58,13 +58,13 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, signal, title }) 
           />
           {/* Progress Arc */}
           <circle
-            stroke={colorClass}
+            stroke={color}
             fill="transparent"
             strokeWidth={strokeWidth}
             strokeDasharray={`${circumference} ${circumference}`}
             style={{
               strokeDashoffset,
-              transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
               strokeLinecap: 'round',
             }}
             r={normalizedRadius}
@@ -72,7 +72,8 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, signal, title }) 
             cy={radius}
           />
         </svg>
-        {/* Center Text */}
+
+        {/* Center Score */}
         <div
           style={{
             position: 'absolute',
@@ -86,22 +87,25 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, signal, title }) 
             justifyContent: 'center',
           }}
         >
-          <span style={{ fontSize: '2.5rem', fontWeight: 800, color: colorClass, lineHeight: 1 }}>
+          <span className="tabular-nums" style={{ fontSize: '2.4rem', fontWeight: 800, color, lineHeight: 1, letterSpacing: '-0.03em' }}>
             {score}
           </span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-            / 100分
+          <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', marginTop: '3px', fontWeight: 600 }}>
+            综合时机指数
           </span>
         </div>
       </div>
 
-      <div style={{ marginTop: '16px', textAlign: 'center' }}>
-        <span className={`badge ${badgeStyle}`} style={{ fontSize: '0.9rem', padding: '6px 16px' }}>
+      <div style={{ marginTop: '16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+        <span className={`badge ${badgeStyle}`} style={{ fontSize: '0.85rem', padding: '5px 14px' }}>
           {badgeText}
         </span>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginTop: '10px', color: 'var(--text-main)' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
           {title}
         </h3>
+        <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', maxWidth: '300px', lineHeight: 1.45, marginTop: '2px' }}>
+          {bannerDesc}
+        </p>
       </div>
     </div>
   );
