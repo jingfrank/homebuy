@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import type { ActiveTab } from './components/Navbar';
 import { MobileTabBar } from './components/MobileTabBar';
@@ -30,6 +30,18 @@ export function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('wizard');
   const isMobile = useIsMobile();
 
+  // 每次切换到盈亏平衡 Tab 时自增，触发 BreakEvenSection 重新挂载并拉取最新数据
+  const [breakevenKey, setBreakevenKey] = useState(0);
+  const prevTabRef = useRef<ActiveTab>('wizard');
+
+  const handleTabChange = (tab: ActiveTab) => {
+    if (tab === 'breakeven' && prevTabRef.current !== 'breakeven') {
+      setBreakevenKey((k) => k + 1);
+    }
+    prevTabRef.current = tab;
+    setActiveTab(tab);
+  };
+
   // 监听 401 事件自动退出
   useEffect(() => {
     const handler = () => setLoggedIn(false);
@@ -56,7 +68,7 @@ export function App() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 桌面端：顶部导航 */}
       {!isMobile && (
-        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+        <Navbar activeTab={activeTab} setActiveTab={handleTabChange} onLogout={handleLogout} />
       )}
 
       {/* Main Content */}
@@ -77,7 +89,7 @@ export function App() {
           {activeTab === 'notes' && <HousingNotesSection />}
           {activeTab === 'rent_vs_buy' && <RentVsBuySection />}
           {activeTab === 'mortgage' && <MortgageCalculatorSection />}
-          {activeTab === 'breakeven' && <BreakEvenSection />}
+          {activeTab === 'breakeven' && <BreakEvenSection key={breakevenKey} />}
           {activeTab === 'checklist' && <ChecklistSection />}
         </div>
       </main>
@@ -107,7 +119,7 @@ export function App() {
 
       {/* 手机端：底部 Tab Bar */}
       {isMobile && (
-        <MobileTabBar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <MobileTabBar activeTab={activeTab} setActiveTab={handleTabChange} />
       )}
     </div>
   );

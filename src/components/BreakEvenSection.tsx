@@ -16,12 +16,22 @@ const pct = (n: number, d = 2) => `${(n * 100).toFixed(d)}%`;
 export const BreakEvenSection: React.FC = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  useEffect(() => {
+  const fetchCommunities = () => {
+    setLoading(true);
     getStoredCommunities()
-      .then(setCommunities)
+      .then((data) => {
+        setCommunities(data);
+        setLastUpdated(new Date());
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  // 每次组件挂载（即每次切换到此 Tab）时自动拉取最新数据
+  useEffect(() => {
+    fetchCommunities();
   }, []);
 
   // 可调参数
@@ -51,7 +61,7 @@ export const BreakEvenSection: React.FC = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px', color: 'var(--text-muted)' }}>
-        ⏳ 加载小区数据中...
+        ⏳ 正在从数据库拉取最新小区数据...
       </div>
     );
   }
@@ -67,11 +77,40 @@ export const BreakEvenSection: React.FC = () => {
           borderLeft: '5px solid var(--primary)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '1.5rem' }}>🎯</span>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)' }}>
-            小区盈亏平衡价分析
-          </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '1.5rem' }}>🎯</span>
+            <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)' }}>
+              小区盈亏平衡价分析
+            </h2>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {lastUpdated && (
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                数据更新于 {lastUpdated.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
+            <button
+              onClick={fetchCommunities}
+              title="重新从数据库加载最新小区数据"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: 'rgba(5, 150, 105, 0.1)',
+                border: '1px solid rgba(5, 150, 105, 0.3)',
+                borderRadius: '8px',
+                padding: '5px 12px',
+                fontSize: '0.82rem',
+                color: 'var(--primary)',
+                cursor: 'pointer',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              🔄 刷新数据
+            </button>
+          </div>
         </div>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem', lineHeight: 1.7 }}>
           持有成本 = 国债机会成本 + 房屋折旧 + 贷款成本；持有收益 = 净租金（扣空置与物业费）。
