@@ -87,7 +87,10 @@ Functional Status Indicators:
   - Sticky-left column comparison matrix table for horizontal inspection.
 
 ### 5.2 Mobile-First Responsive Rules (< 768px)
-- **Single Column Collapse:** Multi-column grids automatically collapse into 1-column cards.
+- **Self-Contained Card Bounds (No Viewport Blowout):** All `.container`, `.glass-card`, flex parents, and grid cells must strictly enforce `width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;`.
+- **Dynamic Grid Sizing (Fluid Minimums):** Never use fixed pixel minimums in auto-fit grids (e.g., `minmax(340px, 1fr)` is strictly banned). Always wrap minimums with `min(100%, ...)` (e.g., `minmax(min(100%, 140px), 1fr)`) so elements collapse smoothly on narrow (360px~390px) viewports without overflowing.
+- **Isolated Table Scroll Wrappers:** Wide data tables (e.g., the 8-column break-even matrix and 9-column listing ledger) must never expand their parent card containers. They must be wrapped in a dedicated `.table-scroll-container` with `min-width: 0; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;`, allowing the table to scroll internally while the outer card remains 100% viewport width.
+- **Single Column Collapse:** Multi-column grids and split parameter cards automatically collapse into 1-column stacks.
 - **Bottom Sheet Drawers (Modals):** Form modals and note editors transform into bottom-anchored sheets (`border-top-left-radius: 20px`, `border-top-right-radius: 20px`, `animation: slideUpDrawer 0.28s cubic-bezier(0.16, 1, 0.3, 1)`).
 - **Floating Sticky Action Pill:** Floating frosted glass widget (`bottom: 76px`, `border-radius: 9999px`) for contextual quick comparisons.
 - **Bottom Navigation Bar:** Fixed `64px` height with iOS safe area padding (`env(safe-area-inset-bottom)`), minimum `48px` touch target per tab item.
@@ -104,10 +107,12 @@ Functional Status Indicators:
 
 ## 7. Anti-Patterns & Banned AI Clichés
 
-1. **NO Emojis in Core Data:** No emojis inside formal quantitative columns or official export data (visual badge icons only).
-2. **NO `Inter` Font:** Use `Plus Jakarta Sans` / `Geist` for distinctive typographic brand identity.
-3. **NO Pure Black (`#000000`):** Use Deep Slate Ink (`#0F172A`).
-4. **NO Purple/Cyan Neon Glows:** Keep aesthetic grounded in authentic architectural emerald and slate.
-5. **NO 3-Equal-Card Monotony:** Use asymmetric split layouts, highlight badges, and weighted visual hierarchy.
-6. **NO Fabricated Metrics:** Never display fake SLA percentages or AI jargon ("100% Seamless", "Next-Gen AI").
-7. **NO Unanchored Floating Spinners:** All asynchronous operations must use structured layout skeleton placeholders.
+1. **NO Global `overflow-x: hidden` as a Layout Band-Aid:** Never apply `overflow-x: hidden` on `html`, `body`, or `#root` to mask wide overflowing content. This creates clipped "half-page" views on mobile by hiding the right side off-screen without fixing the root cause. All child elements must be genuinely fluid.
+2. **NO Hardcoded Grid Minimums:** Never use `minmax(300px+, 1fr)` without `min(100%, ...)`.
+3. **NO Emojis in Core Data:** No emojis inside formal quantitative columns or official export data (visual badge icons only).
+4. **NO `Inter` Font:** Use `Plus Jakarta Sans` / `Geist` for distinctive typographic brand identity.
+5. **NO Pure Black (`#000000`):** Use Deep Slate Ink (`#0F172A`).
+6. **NO Purple/Cyan Neon Glows:** Keep aesthetic grounded in authentic architectural emerald and slate.
+7. **NO 3-Equal-Card Monotony:** Use asymmetric split layouts, highlight badges, and weighted visual hierarchy.
+8. **NO Fabricated Metrics:** Never display fake SLA percentages or AI jargon ("100% Seamless", "Next-Gen AI").
+9. **NO Unanchored Floating Spinners:** All asynchronous operations must use structured layout skeleton placeholders.
