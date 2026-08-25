@@ -122,6 +122,8 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
     }
 
     const calculatedAvgRent = calculateCommunityAvgRentUnitPrice(formData.rentSamples);
+    const userRentInput = Number(formData.avgRentUnitPricePerSqm);
+    const effectiveAvgRent = userRentInput > 0 ? userRentInput : (calculatedAvgRent > 0 ? calculatedAvgRent : 0);
 
     const finalComm: Community = {
       id: formData.id || `comm-${Date.now()}`,
@@ -143,7 +145,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
       askingAvgUnitPriceYuan: formData.askingAvgUnitPriceYuan ? Number(formData.askingAvgUnitPriceYuan) : undefined,
       dealAvgUnitPriceYuan: formData.dealAvgUnitPriceYuan ? Number(formData.dealAvgUnitPriceYuan) : undefined,
       rentSamples: formData.rentSamples || [],
-      avgRentUnitPricePerSqm: calculatedAvgRent > 0 ? calculatedAvgRent : (formData.avgRentUnitPricePerSqm || 0),
+      avgRentUnitPricePerSqm: effectiveAvgRent,
     };
 
     onSave(finalComm);
@@ -439,146 +441,227 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
             </div>
           </fieldset>
 
-          {/* Group 4: Collapsible Market Price & Rent Sample Calculator */}
-          <div
-            style={{
-              border: '1px solid var(--border-color)',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              background: '#f8fafc',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowAdvancedRent(!showAdvancedRent)}
+          {/* Group 4: Market Price & Rental Unit Price Benchmark */}
+          <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <legend style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              💰 4. 租售行情与租金基准单价
+            </legend>
+
+            {/* Price Row: Asking, Deal, and Rent Unit Price */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+              <div>
+                <label htmlFor="comm-asking-price" style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
+                  挂牌均价 (元/㎡)
+                </label>
+                <input
+                  id="comm-asking-price"
+                  type="number"
+                  placeholder="如 82000"
+                  value={formData.askingAvgUnitPriceYuan ?? ''}
+                  onChange={(e) => setFormData({ ...formData, askingAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="comm-deal-price" style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
+                  成交均价 (元/㎡)
+                </label>
+                <input
+                  id="comm-deal-price"
+                  type="number"
+                  placeholder="如 74000"
+                  value={formData.dealAvgUnitPriceYuan ?? ''}
+                  onChange={(e) => setFormData({ ...formData, dealAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="comm-rent-unit-price" style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--primary)', display: 'block', marginBottom: '4px' }}>
+                  小区租金单价 (元/㎡/月) <span style={{ color: 'var(--danger)' }}>*</span>
+                </label>
+                <input
+                  id="comm-rent-unit-price"
+                  type="number"
+                  step="0.1"
+                  placeholder="如 55.0"
+                  value={formData.avgRentUnitPricePerSqm ?? ''}
+                  onChange={(e) => setFormData({ ...formData, avgRentUnitPricePerSqm: e.target.value ? parseFloat(e.target.value) : 0 })}
+                  style={{
+                    borderColor: 'var(--primary)',
+                    background: 'rgba(5, 150, 105, 0.03)',
+                    fontWeight: 700,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Quick Sample Sync Notice */}
+            {(() => {
+              const sampleAvg = calculateCommunityAvgRentUnitPrice(formData.rentSamples);
+              if (sampleAvg > 0) {
+                return (
+                  <div
+                    style={{
+                      background: 'rgba(5, 150, 105, 0.06)',
+                      border: '1px solid rgba(5, 150, 105, 0.2)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '0.8rem',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                    }}
+                  >
+                    <span style={{ color: 'var(--text-main)' }}>
+                      📊 样本库当前包含 <strong>{formData.rentSamples?.length || 0}</strong> 条样本，加权均价为 <strong style={{ color: 'var(--primary)' }}>{sampleAvg} 元/㎡/月</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, avgRentUnitPricePerSqm: sampleAvg })}
+                      style={{
+                        background: 'var(--primary)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      采用样本均价 ({sampleAvg})
+                    </button>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Collapsible Rent Sample Management */}
+            <div
               style={{
-                width: '100%',
-                padding: '14px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                background: '#f1f5f9',
-                cursor: 'pointer',
-                textAlign: 'left',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: '#f8fafc',
               }}
             >
-              <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                📊 租房样本库与均价锚点 ({formData.rentSamples?.length || 0}条样本)
-              </span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
-                {showAdvancedRent ? '收起 ▴' : '展开维护 ▾'}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setShowAdvancedRent(!showAdvancedRent)}
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: '#f1f5f9',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  border: 'none',
+                }}
+              >
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  📋 详细租房样本库录入 ({formData.rentSamples?.length || 0} 条样本)
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+                  {showAdvancedRent ? '收起 ▴' : '展开维护 ▾'}
+                </span>
+              </button>
 
-            {showAdvancedRent && (
-              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* Market Benchmark Price */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label htmlFor="comm-asking-price" style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
-                      挂牌均价 (元/㎡)
-                    </label>
-                    <input
-                      id="comm-asking-price"
-                      type="number"
-                      placeholder="如 82000"
-                      value={formData.askingAvgUnitPriceYuan ?? ''}
-                      onChange={(e) => setFormData({ ...formData, askingAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    />
+              {showAdvancedRent && (
+                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Quick Add Sample Form */}
+                  <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                      + 添加新租房成交/在租样本
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <input
+                        type="number"
+                        placeholder="面积 (㎡) *"
+                        value={sampleArea}
+                        onChange={(e) => setSampleArea(e.target.value)}
+                      />
+                      <input
+                        type="number"
+                        placeholder="月租 (元/月) *"
+                        value={sampleRent}
+                        onChange={(e) => setSampleRent(e.target.value)}
+                      />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder="户型 (如 2室1厅)"
+                        value={sampleLayout}
+                        onChange={(e) => setSampleLayout(e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        placeholder="备注 (如 贝壳在租/自如)"
+                        value={sampleNote}
+                        onChange={(e) => setSampleNote(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleAddSample}
+                      style={{ minHeight: '34px', fontSize: '0.8rem', marginTop: '4px' }}
+                    >
+                      + 加入小区样本库并同步均价
+                    </button>
                   </div>
 
-                  <div>
-                    <label htmlFor="comm-deal-price" style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
-                      成交均价 (元/㎡)
-                    </label>
-                    <input
-                      id="comm-deal-price"
-                      type="number"
-                      placeholder="如 74000"
-                      value={formData.dealAvgUnitPriceYuan ?? ''}
-                      onChange={(e) => setFormData({ ...formData, dealAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    />
-                  </div>
-                </div>
-
-                {/* Quick Add Sample Form */}
-                <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                    + 添加新租房成交/在租样本
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <input
-                      type="number"
-                      placeholder="面积 (㎡) *"
-                      value={sampleArea}
-                      onChange={(e) => setSampleArea(e.target.value)}
-                    />
-                    <input
-                      type="number"
-                      placeholder="月租 (元/月) *"
-                      value={sampleRent}
-                      onChange={(e) => setSampleRent(e.target.value)}
-                    />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <input
-                      type="text"
-                      placeholder="户型 (如 2室1厅)"
-                      value={sampleLayout}
-                      onChange={(e) => setSampleLayout(e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      placeholder="备注 (如 贝壳在租)"
-                      value={sampleNote}
-                      onChange={(e) => setSampleNote(e.target.value)}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleAddSample}
-                    style={{ minHeight: '34px', fontSize: '0.8rem', marginTop: '4px' }}
-                  >
-                    + 加入小区样本库
-                  </button>
-                </div>
-
-                {/* Sample List */}
-                {formData.rentSamples && formData.rentSamples.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '140px', overflowY: 'auto' }}>
-                    {formData.rentSamples.map((s) => (
-                      <div
-                        key={s.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '6px 10px',
-                          background: '#ffffff',
-                          borderRadius: '6px',
-                          border: '1px solid #e2e8f0',
-                          fontSize: '0.775rem',
-                        }}
-                      >
-                        <span>
-                          <strong>{s.area}㎡</strong> · <strong>{s.monthlyRent}元/月</strong>
-                          {s.layout && ` (${s.layout})`}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSample(s.id)}
-                          style={{ color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+                  {/* Sample List */}
+                  {formData.rentSamples && formData.rentSamples.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '140px', overflowY: 'auto' }}>
+                      {formData.rentSamples.map((s) => (
+                        <div
+                          key={s.id}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '6px 10px',
+                            background: '#ffffff',
+                            borderRadius: '6px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '0.775rem',
+                          }}
                         >
-                          🗑️
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                          <div>
+                            <strong>{s.layout || '户型未填'}</strong> | {s.area}㎡ |{' '}
+                            <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                              {s.monthlyRent}元/月 ({Math.round(s.monthlyRent / s.area)}元/㎡)
+                            </span>
+                            {s.note && <span style={{ color: 'var(--text-dim)', marginLeft: '6px' }}>({s.note})</span>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSample(s.id)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--danger)',
+                              cursor: 'pointer',
+                              padding: '2px 6px',
+                              fontSize: '0.8rem',
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </fieldset>
         </form>
 
         {/* Sticky Bottom Action Bar (Thumb-Friendly on Mobile) */}

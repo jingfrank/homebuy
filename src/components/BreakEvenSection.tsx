@@ -7,7 +7,7 @@ import {
   DEPRECIATION_TIERS,
 } from '../types/breakeven';
 import type { BreakEvenParams, BreakEvenResult } from '../types/breakeven';
-import { getStoredCommunities } from '../utils/communityStorage';
+import { getStoredCommunities, updateCommunity } from '../utils/communityStorage';
 
 // ── helpers ──────────────────────────────────────────────
 const fmt = (n: number) => n.toLocaleString('zh-CN');
@@ -17,6 +17,8 @@ export const BreakEvenSection: React.FC = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [rentOverrides, setRentOverrides] = useState<Record<string, number>>({});
+  const [saveStatus, setSaveStatus] = useState<Record<string, string>>({});
 
   const fetchCommunities = () => {
     setLoading(true);
@@ -40,23 +42,53 @@ export const BreakEvenSection: React.FC = () => {
   const updateParam = <K extends keyof BreakEvenParams>(key: K, value: BreakEvenParams[K]) =>
     setParams((p) => ({ ...p, [key]: value }));
 
-  // 每个小区的计算结果
+  const handleUpdateCommunityRent = (commId: string, rent: number) => {
+    setRentOverrides((prev) => ({ ...prev, [commId]: rent }));
+  };
+
+  const handleSaveRentToCommunity = async (commId: string, rent: number) => {
+    const targetComm = communities.find((c) => c.id === commId);
+    if (!targetComm) return;
+
+    try {
+      setSaveStatus((prev) => ({ ...prev, [commId]: 'saving' }));
+      const updated: Community = {
+        ...targetComm,
+        avgRentUnitPricePerSqm: rent,
+      };
+      await updateCommunity(updated);
+      setCommunities((prev) => prev.map((c) => (c.id === commId ? updated : c)));
+      setSaveStatus((prev) => ({ ...prev, [commId]: 'saved' }));
+      setTimeout(() => {
+        setSaveStatus((prev) => ({ ...prev, [commId]: '' }));
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus((prev) => ({ ...prev, [commId]: 'error' }));
+    }
+  };
+
+  // 每个小区的计算结果（支持实时微调单价并实时重算）
   const results = useMemo(() => {
     return communities.map((comm) => {
-      const avgRent = comm.rentSamples && comm.rentSamples.length > 0
+      const dbAvgRent = (comm.rentSamples && comm.rentSamples.length > 0)
         ? calculateCommunityAvgRentUnitPrice(comm.rentSamples)
-        : (comm.avgRentUnitPricePerSqm ?? 0);
+        : (comm.avgRentUnitPricePerSqm || 50);
+      const effectiveAvgRent = rentOverrides[comm.id] !== undefined
+        ? rentOverrides[comm.id]
+        : dbAvgRent;
+
       const result = computeBreakEven(
-        avgRent,
+        effectiveAvgRent,
         comm.propertyFee ?? 0,
         comm.builtYear,
         comm.askingAvgUnitPriceYuan,
         comm.dealAvgUnitPriceYuan,
         params,
       );
-      return { community: comm, result, avgRent };
+      return { community: comm, result, avgRent: effectiveAvgRent };
     });
-  }, [communities, params]);
+  }, [communities, params, rentOverrides]);
 
   if (loading) {
     return (
@@ -227,6 +259,7 @@ export const BreakEvenSection: React.FC = () => {
               <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
                 <th style={th}>小区</th>
                 <th style={th}>楼龄</th>
+                <th style={th}>测算租金单价</th>
                 <th style={th}>折旧率</th>
                 <th style={th}>盈亏平衡价</th>
                 <th style={th}>挂牌均价</th>
@@ -236,12 +269,15 @@ export const BreakEvenSection: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {results.filter((r) => r.result).map(({ community, result }) => {
+              {results.filter((r) => r.result).map(({ community, result, avgRent }) => {
                 const r = result!;
                 return (
                   <tr key={community.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={td}><strong>{community.name}</strong></td>
                     <td style={td}>{r.buildingAge}年</td>
+                    <td style={{ ...td, color: 'var(--primary)', fontWeight: 700 }}>
+                      {avgRent} 元/㎡/月
+                    </td>
                     <td style={td}>{pct(r.depreciationRate)}</td>
                     <td style={{ ...td, fontWeight: 800, color: 'var(--primary)' }}>
                       {fmt(r.breakEvenPricePerSqm)} 元/㎡
@@ -277,7 +313,18 @@ export const BreakEvenSection: React.FC = () => {
               </div>
             );
           }
-          return <BreakEvenCard key={community.id} community={community} result={result} avgRent={avgRent} params={params} />;
+          return (
+            <BreakEvenCard
+              key={community.id}
+              community={community}
+              result={result}
+              avgRent={avgRent}
+              params={params}
+              onUpdateRent={(newRent) => handleUpdateCommunityRent(community.id, newRent)}
+              onSaveRent={(newRent) => handleSaveRentToCommunity(community.id, newRent)}
+              saveStatus={saveStatus[community.id]}
+            />
+          );
         })}
         {results.length === 0 && (
           <div className="glass-card" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -298,7 +345,10 @@ const BreakEvenCard: React.FC<{
   result: BreakEvenResult;
   avgRent: number;
   params: BreakEvenParams;
-}> = ({ community, result: r, avgRent, params }) => {
+  onUpdateRent: (newRent: number) => void;
+  onSaveRent: (newRent: number) => void;
+  saveStatus?: string;
+}> = ({ community, result: r, avgRent, params, onUpdateRent, onSaveRent, saveStatus }) => {
   const asking = community.askingAvgUnitPriceYuan ?? 0;
   const deal = community.dealAvgUnitPriceYuan ?? 0;
   const refPrice = deal || asking;
@@ -323,11 +373,90 @@ const BreakEvenCard: React.FC<{
           <span className="badge badge-primary">{community.district} · {community.sector}</span>
           <span className="badge badge-secondary">{community.ringLocation || ''}</span>
         </div>
-        <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '10px' }}>
           <span>🏗️ 建成 {community.builtYear} 年 (楼龄 {r.buildingAge}年)</span>
           <span>📐 折旧率 <strong style={{ color: 'var(--primary)' }}>{pct(r.depreciationRate)}</strong></span>
-          <span>🏷️ 租赁单价 {avgRent} 元/㎡/月</span>
           <span>物业服务费 {community.propertyFee} 元/㎡/月</span>
+        </div>
+
+        {/* Interactive Rental Unit Price Adjustment Bar */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: '#f8fafc',
+            padding: '10px 14px',
+            borderRadius: '10px',
+            border: '1px solid var(--border-color)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+              🏷️ 测算租赁单价:
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <button
+                type="button"
+                onClick={() => onUpdateRent(Math.max(1, Math.round((avgRent - 1) * 10) / 10))}
+                style={{ padding: '2px 8px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer', fontWeight: 700 }}
+                title="-1元/㎡/月"
+              >
+                -1
+              </button>
+              <input
+                type="number"
+                step="0.5"
+                value={avgRent}
+                onChange={(e) => onUpdateRent(parseFloat(e.target.value) || 0)}
+                style={{
+                  width: '75px',
+                  padding: '3px 6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  color: 'var(--primary)',
+                  textAlign: 'center',
+                  borderRadius: '6px',
+                  border: '1.5px solid var(--primary)',
+                  background: '#fff',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => onUpdateRent(Math.round((avgRent + 1) * 10) / 10)}
+                style={{ padding: '2px 8px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer', fontWeight: 700 }}
+                title="+1元/㎡/月"
+              >
+                +1
+              </button>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>元/㎡/月</span>
+            </div>
+          </div>
+
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {saveStatus === 'saving' && <span>⏳ 正在保存...</span>}
+            {saveStatus === 'saved' && <span style={{ color: 'var(--primary)', fontWeight: 700 }}>✅ 已保存到小区档案！</span>}
+            {saveStatus === 'error' && <span style={{ color: 'var(--danger)' }}>❌ 保存失败</span>}
+
+            <button
+              type="button"
+              onClick={() => onSaveRent(avgRent)}
+              style={{
+                background: 'var(--primary)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '5px 12px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+              title="将此单价持久化保存为该小区的基准租金"
+            >
+              💾 保存为此小区基准租金
+            </button>
+          </div>
         </div>
       </div>
 

@@ -6,22 +6,40 @@ interface ListingCompareModalProps {
   selectedListings: HouseListing[];
   communities: Community[];
   onClose: () => void;
+  onUpdateListing?: (updated: HouseListing) => void;
 }
 
 export const ListingCompareModal: React.FC<ListingCompareModalProps> = ({
   selectedListings,
   communities,
   onClose,
+  onUpdateListing,
 }) => {
   const [viewMode, setViewMode] = useState<'card' | 'matrix'>('card');
-
+  const [listingsData, setListingsData] = useState<HouseListing[]>(selectedListings);
 
   if (!selectedListings || selectedListings.length === 0) return null;
+
+  const handleUpdateField = (
+    listingId: string,
+    field: keyof HouseListing,
+    value: number
+  ) => {
+    const updatedList = listingsData.map((item) => {
+      if (item.id === listingId) {
+        const updated = { ...item, [field]: value };
+        onUpdateListing?.(updated);
+        return updated;
+      }
+      return item;
+    });
+    setListingsData(updatedList);
+  };
 
   const communityMap = new Map(communities.map((c) => [c.id, c]));
 
   // Calculate metrics for each selected listing
-  const items = selectedListings.map((listing) => {
+  const items = listingsData.map((listing) => {
     const comm = communityMap.get(listing.communityId);
     const metrics = computeListingMetrics(listing, comm);
     return {
@@ -298,10 +316,50 @@ export const ListingCompareModal: React.FC<ListingCompareModalProps> = ({
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>预期月租 / 月净收益</span>
-                        <span className="tabular-nums" style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                          {listing.expectedMonthlyRent} / {metrics.netMonthlyRentYuan} 元/月
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>预期毛月租金</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateField(listing.id, 'expectedMonthlyRent', Math.max(0, (listing.expectedMonthlyRent || 0) - 100))}
+                            style={{ padding: '1px 5px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer' }}
+                            title="-100元"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            step="100"
+                            value={listing.expectedMonthlyRent || ''}
+                            onChange={(e) => handleUpdateField(listing.id, 'expectedMonthlyRent', parseFloat(e.target.value) || 0)}
+                            style={{
+                              width: '78px',
+                              padding: '2px 4px',
+                              fontSize: '0.85rem',
+                              fontWeight: 700,
+                              color: 'var(--primary)',
+                              textAlign: 'center',
+                              borderRadius: '6px',
+                              border: '1px solid var(--primary)',
+                              background: 'rgba(5, 150, 105, 0.05)',
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateField(listing.id, 'expectedMonthlyRent', (listing.expectedMonthlyRent || 0) + 100)}
+                            style={{ padding: '1px 5px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer' }}
+                            title="+100元"
+                          >
+                            +
+                          </button>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>元/月</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.775rem', color: 'var(--text-muted)' }}>
+                        <span>扣空置物业净月租</span>
+                        <span className="tabular-nums" style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                          {metrics.netMonthlyRentYuan} 元/月
                         </span>
                       </div>
 
@@ -406,6 +464,50 @@ export const ListingCompareModal: React.FC<ListingCompareModalProps> = ({
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         {Math.round((listing.totalPrice * 10000) / listing.buildingArea).toLocaleString()} 元/㎡
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+
+                <tr style={{ borderBottom: '1px solid var(--border-color)', background: '#ffffff' }}>
+                  <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--text-main)', position: 'sticky', left: 0, background: '#ffffff' }}>
+                    💵 预期毛月租金 (可微调)
+                  </td>
+                  {items.map(({ listing }) => (
+                    <td key={listing.id} className="tabular-nums" style={{ padding: '12px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateField(listing.id, 'expectedMonthlyRent', Math.max(0, (listing.expectedMonthlyRent || 0) - 100))}
+                          style={{ padding: '2px 5px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer' }}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          step="100"
+                          value={listing.expectedMonthlyRent || ''}
+                          onChange={(e) => handleUpdateField(listing.id, 'expectedMonthlyRent', parseFloat(e.target.value) || 0)}
+                          style={{
+                            width: '80px',
+                            padding: '3px 4px',
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
+                            color: 'var(--primary)',
+                            textAlign: 'center',
+                            borderRadius: '6px',
+                            border: '1px solid var(--primary)',
+                            background: 'rgba(5, 150, 105, 0.05)',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateField(listing.id, 'expectedMonthlyRent', (listing.expectedMonthlyRent || 0) + 100)}
+                          style={{ padding: '2px 5px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer' }}
+                        >
+                          +
+                        </button>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>元/月</span>
                       </div>
                     </td>
                   ))}

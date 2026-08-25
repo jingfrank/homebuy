@@ -439,9 +439,10 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
                           &nbsp;(约 {(comm.askingAvgUnitPriceYuan - comm.dealAvgUnitPriceYuan).toLocaleString()} 元/㎡)
                         </span>
                       )}
-                      {(comm.rentSamples && comm.rentSamples.length > 0) && (
+                      {(Boolean(comm.avgRentUnitPricePerSqm || (comm.rentSamples && comm.rentSamples.length > 0))) && (
                         <span style={{ fontSize: '0.825rem', background: '#eff6ff', color: '#1d4ed8', padding: '2px 9px', borderRadius: '12px', fontWeight: 700, border: '1px solid #bfdbfe' }}>
-                          🏷️ 租赁单价: {calculateCommunityAvgRentUnitPrice(comm.rentSamples)} 元/㎡/月 ({comm.rentSamples.length}组样本加权)
+                          🏷️ 租赁单价: {comm.avgRentUnitPricePerSqm || calculateCommunityAvgRentUnitPrice(comm.rentSamples)} 元/㎡/月
+                          {comm.rentSamples && comm.rentSamples.length > 0 ? ` (${comm.rentSamples.length}组样本加权)` : ''}
                         </span>
                       )}
                     </div>
@@ -894,6 +895,7 @@ export const CommunityLedgerSection: React.FC<CommunityLedgerSectionProps> = ({
           selectedListings={listings.filter((l) => compareListingsIds.includes(l.id))}
           communities={communities}
           onClose={() => setIsCompareModalOpen(false)}
+          onUpdateListing={handleSaveListingDirect}
         />
       )}
     </div>
