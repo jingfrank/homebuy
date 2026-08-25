@@ -19,12 +19,36 @@ import { getStoredCommunities, updateCommunity } from '../utils/communityStorage
 const fmt = (n: number) => n.toLocaleString('zh-CN');
 const pct = (n: number, d = 2) => `${(n * 100).toFixed(d)}%`;
 
+// ── localStorage 持久化（与 AssessmentWizard / MortgageCalculator 同模式）────
+const STORAGE_BREAKEVEN_PARAMS_KEY = 'homebuy_breakeven_params';
+const STORAGE_PREMIUM_OVERRIDES_KEY = 'homebuy_breakeven_premium_overrides';
+
+function getStoredParams(): BreakEvenParams {
+  try {
+    const raw = localStorage.getItem(STORAGE_BREAKEVEN_PARAMS_KEY);
+    if (!raw) return DEFAULT_BREAKEVEN_PARAMS;
+    return { ...DEFAULT_BREAKEVEN_PARAMS, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_BREAKEVEN_PARAMS;
+  }
+}
+
+function getStoredPremiumOverrides(): Record<string, PremiumScoreParams> {
+  try {
+    const raw = localStorage.getItem(STORAGE_PREMIUM_OVERRIDES_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
 export const BreakEvenSection: React.FC = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [rentOverrides, setRentOverrides] = useState<Record<string, number>>({});
-  const [premiumOverrides, setPremiumOverrides] = useState<Record<string, PremiumScoreParams>>({});
+  const [premiumOverrides, setPremiumOverrides] = useState<Record<string, PremiumScoreParams>>(() => getStoredPremiumOverrides());
   const [saveStatus, setSaveStatus] = useState<Record<string, string>>({});
 
   const fetchCommunities = () => {
@@ -43,11 +67,15 @@ export const BreakEvenSection: React.FC = () => {
     fetchCommunities();
   }, []);
 
-  // 可调宏观与贷款参数
-  const [params, setParams] = useState<BreakEvenParams>(DEFAULT_BREAKEVEN_PARAMS);
+  // 可调宏观与贷款参数（从 localStorage 恢复，变更时自动存回）
+  const [params, setParams] = useState<BreakEvenParams>(() => getStoredParams());
 
   const updateParam = <K extends keyof BreakEvenParams>(key: K, value: BreakEvenParams[K]) =>
-    setParams((p) => ({ ...p, [key]: value }));
+    setParams((p) => {
+      const next = { ...p, [key]: value };
+      try { localStorage.setItem(STORAGE_BREAKEVEN_PARAMS_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
 
   const handleUpdateCommunityRent = (commId: string, rent: number) => {
     setRentOverrides((prev) => ({ ...prev, [commId]: rent }));
@@ -61,13 +89,15 @@ export const BreakEvenSection: React.FC = () => {
     setPremiumOverrides((prev) => {
       const comm = communities.find((c) => c.id === commId);
       const current = prev[commId] || getDefaultPremiumParams(comm);
-      return {
+      const next = {
         ...prev,
         [commId]: {
           ...current,
           [field]: value,
         },
       };
+      try { localStorage.setItem(STORAGE_PREMIUM_OVERRIDES_KEY, JSON.stringify(next)); } catch {}
+      return next;
     });
   };
 
