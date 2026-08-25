@@ -66,13 +66,140 @@ export const DEPRECIATION_TIERS: { range: string; rate: number; ratePct: string 
 ];
 
 // ═══════════════════════════════════════════════════════════
+//  五维客观合理溢价率量化模型 (5-Dimension Premium Valuation Model)
+// ═══════════════════════════════════════════════════════════
+
+export interface PremiumScoreParams {
+  locationTierPct: number;    // ① 地段与城市能级溢价 (0% ~ +15%)
+  qualityTierPct: number;     // ② 房屋性质与品质溢价 (-8% ~ +10%)
+  resourceTierPct: number;    // ③ 确定性公共与学区资源 (0% ~ +8%)
+  liquidityTierPct: number;   // ④ 户型流动性与去化速度 (-5% ~ +5%)
+  utilityTierPct: number;     // ⑤ 自住通勤特定效用 (0% ~ +5%)
+}
+
+export interface PremiumOption {
+  id: string;
+  label: string;
+  subLabel?: string;
+  ratePct: number;
+  rateLabel: string;
+}
+
+export const LOCATION_OPTIONS: PremiumOption[] = [
+  { id: 'loc_core', label: '内环核心/一线滨江/前滩', subLabel: '顶级不可再生稀缺资源', ratePct: 0.12, rateLabel: '+12%' },
+  { id: 'loc_mid_inner', label: '中内环产业核心区', subLabel: '张江/联洋/大宁/金桥等', ratePct: 0.08, rateLabel: '+8%' },
+  { id: 'loc_mid_outer', label: '中外环成熟居住区', subLabel: '三林/北蔡/周家渡等', ratePct: 0.05, rateLabel: '+5%' },
+  { id: 'loc_outer_metro', label: '外环外近郊地铁盘', subLabel: '泗泾/周浦/嘉定新城等', ratePct: 0.02, rateLabel: '+2%' },
+  { id: 'loc_suburb', label: '远郊非核心/纯睡城', subLabel: '无城市红利溢价', ratePct: 0.00, rateLabel: '0%' },
+];
+
+export const QUALITY_OPTIONS: PremiumOption[] = [
+  { id: 'q_subnew_brand', label: '大牌优质次新商品房', subLabel: '5~10年内/人车分流/大牌物业', ratePct: 0.08, rateLabel: '+8%' },
+  { id: 'q_normal_commodity', label: '普通商品房 (10~20年)', subLabel: '维护尚可/商品房界面', ratePct: 0.02, rateLabel: '+2%' },
+  { id: 'q_relocation', label: '动迁安置房 (有电梯)', subLabel: '两梯多户/群租较多/车位紧', ratePct: -0.04, rateLabel: '-4%' },
+  { id: 'q_old_public', label: '25年以上老公房/老破小', subLabel: '无电梯/管道老化/高折旧', ratePct: -0.08, rateLabel: '-8%' },
+];
+
+export const RESOURCE_OPTIONS: PremiumOption[] = [
+  { id: 'res_tier1', label: '一梯队名校 / 核心双轨交 400m', subLabel: '确定性名校学区或核心双枢纽', ratePct: 0.05, rateLabel: '+5%' },
+  { id: 'res_normal', label: '普通学区 / 单轨交 800m', subLabel: '常规地铁商业配套', ratePct: 0.02, rateLabel: '+2%' },
+  { id: 'res_none', label: '弱学区 / 远离轨交', subLabel: '无特殊公共资源加成', ratePct: 0.00, rateLabel: '0%' },
+];
+
+export const LIQUIDITY_OPTIONS: PremiumOption[] = [
+  { id: 'liq_golden', label: '黄金主力南北通 2~3 房', subLabel: '80~100㎡全南/南北通(极速去化)', ratePct: 0.03, rateLabel: '+3%' },
+  { id: 'liq_normal', label: '常规及格户型', subLabel: '采光正常/主流格局', ratePct: 0.00, rateLabel: '0%' },
+  { id: 'liq_bad', label: '异形/采光差/超大动迁', subLabel: '手枪型/顶底楼/转手困难', ratePct: -0.04, rateLabel: '-4%' },
+];
+
+export const UTILITY_OPTIONS: PremiumOption[] = [
+  { id: 'ut_great', label: '夫妻通勤<25分钟 / 老人带娃极便', subLabel: '大幅省下时间与情绪成本', ratePct: 0.03, rateLabel: '+3%' },
+  { id: 'ut_normal', label: '常规通勤自住 / 出租投资', subLabel: '无额外自住情感红利', ratePct: 0.00, rateLabel: '0%' },
+];
+
+export function getDefaultPremiumParams(comm?: {
+  name?: string;
+  ringLocation?: string;
+  builtYear?: number;
+  schoolInfo?: string;
+  metroInfoText?: string;
+}): PremiumScoreParams {
+  // 1. 地段
+  let locationTierPct = 0.05; // 默认中外环
+  const ring = comm?.ringLocation || '';
+  if (ring.includes('内环内') || (ring.includes('内环') && !ring.includes('中内环'))) {
+    locationTierPct = 0.12;
+  } else if (ring.includes('中内环')) {
+    locationTierPct = 0.08;
+  } else if (ring.includes('中外环')) {
+    locationTierPct = 0.05;
+  } else if (ring.includes('外环外')) {
+    locationTierPct = 0.02;
+  }
+
+  // 2. 品质与性质
+  let qualityTierPct = 0.02;
+  const name = comm?.name || '';
+  const year = comm?.builtYear || 2015;
+  const age = 2026 - year;
+
+  if (name.includes('家园') || name.includes('新村') || name.includes('村') || (name.includes('苑') && age > 15)) {
+    if (age > 25) {
+      qualityTierPct = -0.08; // 老破小
+    } else {
+      qualityTierPct = -0.04; // 动迁安置房
+    }
+  } else if (age <= 10) {
+    qualityTierPct = 0.08; // 大牌次新
+  } else if (age <= 20) {
+    qualityTierPct = 0.02; // 普通商品房
+  } else {
+    qualityTierPct = -0.08; // 老公房
+  }
+
+  // 3. 资源配套
+  let resourceTierPct = 0.02;
+  const school = comm?.schoolInfo || '';
+  const metro = comm?.metroInfoText || '';
+  if (school.includes('进才') || school.includes('明珠') || school.includes('实验') || school.includes('华二') || school.includes('名校')) {
+    resourceTierPct = 0.05;
+  } else if (metro.includes('400米') || metro.includes('300米') || metro.includes('双轨')) {
+    resourceTierPct = 0.05;
+  } else if (metro) {
+    resourceTierPct = 0.02;
+  } else {
+    resourceTierPct = 0.00;
+  }
+
+  return {
+    locationTierPct,
+    qualityTierPct,
+    resourceTierPct,
+    liquidityTierPct: 0.00, // 默认常规户型
+    utilityTierPct: 0.00,   // 默认常规自住
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
 //  计算结果
 // ═══════════════════════════════════════════════════════════
 
 export interface BreakEvenResult {
-  // 核心结果
-  breakEvenPricePerSqm: number;   // 盈亏平衡单价 (元/㎡)
+  // 核心底线结果
+  breakEvenPricePerSqm: number;   // 盈亏平衡单价 (纯现金流底线价, 元/㎡)
   breakEvenTotalPriceWuan: number; // 盈亏平衡总价 (万元)
+
+  // 五维溢价与合理目标建议价
+  premiumParams: PremiumScoreParams;
+  totalReasonablePremiumRate: number; // 五维总合理溢价率 (如 0.15 = +15%)
+  targetFairPricePerSqm: number;       // 🎯 合理买入目标单价 (元/㎡) = breakEvenPricePerSqm * (1 + totalReasonablePremiumRate)
+  targetFairTotalPriceWuan: number;    // 🎯 合理买入目标总价 (万元)
+
+  // 谈判砍价与水分差额 (当前市场价 vs 合理目标建议价)
+  bubbleGapPerSqm: number;             // 水分差额 (元/㎡) = 市场价 - 合理建议价 (正数表示虚高需砍价)
+  bubbleGapPct: number;                // 溢价/水分百分比 %
+  actionVerdict: 'strong_buy' | 'fair_buy' | 'overpriced' | 'extreme_bubble';
+  actionVerdictText: string;
 
   // 成本端拆解（均为年化比率）
   depreciationRate: number;     // 折旧率
@@ -95,9 +222,9 @@ export interface BreakEvenResult {
   providentLoanAmountWuan: number; // 公积金贷款 (万元)
   commercialLoanAmountWuan: number; // 商贷 (万元)
 
-  // 对比分析（当前市场价 vs 盈亏平衡价）
-  askingPricePremiumPct: number | null; // 挂牌均价溢价率 %
-  dealPricePremiumPct: number | null;    // 成交均价溢价率 %
+  // 对比分析（当前市场价 vs 盈亏平衡底线价）
+  askingPricePremiumPct: number | null; // 挂牌均价相对底线溢价率 %
+  dealPricePremiumPct: number | null;    // 成交均价相对底线溢价率 %
 
   // 判定
   verdict: 'profitable' | 'marginal' | 'overpriced' | 'no_data';
@@ -115,6 +242,7 @@ export function computeBreakEven(
   askingPricePerSqm?: number,
   dealPricePerSqm?: number,
   params: BreakEvenParams = DEFAULT_BREAKEVEN_PARAMS,
+  customPremiumParams?: PremiumScoreParams,
 ): BreakEvenResult | null {
   if (avgRentUnitPrice <= 0) return null;
 
@@ -131,13 +259,6 @@ export function computeBreakEven(
   const totalNetAnnualRent = netAnnualRentPerSqm * referenceArea; // 参考面积的总净年租金
 
   // ── 成本端：分段求解盈亏平衡总价 P ──
-  //  P 满足: totalNetAnnualRent = P × (costRate − inflationRate)
-  //  costRate = bondRate×dp + depRate + weightedLoanRate×(1−dp)
-  //  weightedLoanRate 取决于 P（因公积金额度上限是固定值）
-
-  // Case 1: 全公积金 (贷款 ≤ 公积金上限)
-  //   P × (1−dp) ≤ providentLimit  →  P ≤ providentLimit / (1−dp)
-  //   weightedLoanRate = providentRate
   const costRateAllProv = bondRate * dp + depreciationRate + providentRate * (1 - dp) - inflationRate;
   const P1 = costRateAllProv > 0 ? totalNetAnnualRent / costRateAllProv : Infinity;
   const allProvThreshold = providentLimit / (1 - dp);
@@ -147,23 +268,16 @@ export function computeBreakEven(
   let weightedLoanRate: number;
 
   if (P1 <= allProvThreshold) {
-    // 全公积金即可覆盖
     breakEvenTotalPrice = P1;
     weightedLoanRate = providentRate;
     loanType = 'all_provident';
   } else {
-    // Case 2: 组合贷 (贷款 > 公积金上限)
-    //   weightedLoanRate = commRate + providentLimit×(provRate−commRate) / (P×(1−dp))
-    //   代入后:
-    //   totalNetAnnualRent = P×[bondRate×dp + dep + commRate×(1−dp) − inflation] + providentLimit×(provRate−commRate)
-    //   P = [totalNetAnnualRent + providentLimit×(commRate−provRate)] / baseCostRate
     const baseCostRate = bondRate * dp + depreciationRate + commercialRate * (1 - dp) - inflationRate;
-    const provFundSavings = providentLimit * (commercialRate - providentRate); // 公积金利率优惠节省 (正数)
+    const provFundSavings = providentLimit * (commercialRate - providentRate);
     breakEvenTotalPrice = baseCostRate > 0
       ? (totalNetAnnualRent + provFundSavings) / baseCostRate
       : Infinity;
 
-    // 回算实际加权利率
     const totalLoan = breakEvenTotalPrice * (1 - dp);
     const provPart = Math.min(totalLoan, providentLimit);
     const commPart = Math.max(0, totalLoan - providentLimit);
@@ -173,7 +287,49 @@ export function computeBreakEven(
     loanType = 'mixed';
   }
 
-  const breakEvenPricePerSqm = breakEvenTotalPrice / referenceArea;
+  const breakEvenPricePerSqm = Math.round(breakEvenTotalPrice / referenceArea);
+
+  // ── 五维合理溢价与目标买入建议价计算 ──
+  const premiumParams: PremiumScoreParams = customPremiumParams || getDefaultPremiumParams({ builtYear });
+  const totalReasonablePremiumRate = Math.round(
+    (
+      (premiumParams.locationTierPct +
+       premiumParams.qualityTierPct +
+       premiumParams.resourceTierPct +
+       premiumParams.liquidityTierPct +
+       premiumParams.utilityTierPct) * 1000
+    )
+  ) / 1000;
+
+  const targetFairPricePerSqm = Math.round(breakEvenPricePerSqm * (1 + totalReasonablePremiumRate));
+  const wuan = (yuan: number) => Math.round((yuan / 10000) * 100) / 100;
+  const targetFairTotalPriceWuan = wuan(targetFairPricePerSqm * referenceArea);
+
+  // ── 市场实际价格与合理买入价对比（砍价空间与水分） ──
+  const refMarketPrice = dealPricePerSqm ?? askingPricePerSqm ?? 0;
+  let bubbleGapPerSqm = 0;
+  let bubbleGapPct = 0;
+  let actionVerdict: BreakEvenResult['actionVerdict'] = 'fair_buy';
+  let actionVerdictText = '暂无市场价格数据';
+
+  if (refMarketPrice > 0) {
+    bubbleGapPerSqm = refMarketPrice - targetFairPricePerSqm;
+    bubbleGapPct = Math.round(((refMarketPrice - targetFairPricePerSqm) / targetFairPricePerSqm) * 1000) / 10;
+
+    if (bubbleGapPct <= -5) {
+      actionVerdict = 'strong_buy';
+      actionVerdictText = `🟢 低于合理买入目标价 ${Math.abs(bubbleGapPct)}%，性价比极高（安全边际充足）`;
+    } else if (bubbleGapPct <= 8) {
+      actionVerdict = 'fair_buy';
+      actionVerdictText = `🟡 处于合理估值带（偏离 ${bubbleGapPct > 0 ? '+' : ''}${bubbleGapPct}%），可正常谈判推进`;
+    } else if (bubbleGapPct <= 20) {
+      actionVerdict = 'overpriced';
+      actionVerdictText = `🔴 高于合理建议价 ${bubbleGapPct}%，建议砍价让利 ${bubbleGapPerSqm.toLocaleString()} 元/㎡`;
+    } else {
+      actionVerdict = 'extreme_bubble';
+      actionVerdictText = `⛔ 严重泡沫虚高 ${bubbleGapPct}%，严重透支未来涨幅，坚决大刀砍价`;
+    }
+  }
 
   // ── 贷款结构 ──
   const downPaymentAmount = breakEvenTotalPrice * dp;
@@ -194,33 +350,38 @@ export function computeBreakEven(
     ? Math.round(((dealPricePerSqm - breakEvenPricePerSqm) / breakEvenPricePerSqm) * 1000) / 10
     : null;
 
-  // ── 判定 ──
+  // ── 纯底线判定 ──
   let verdict: BreakEvenResult['verdict'];
   let verdictText: string;
-  const refPrice = dealPricePerSqm ?? askingPricePerSqm ?? 0;
   const refPct = dealPricePremiumPct ?? askingPricePremiumPct;
 
-  if (refPrice > 0 && refPct !== null) {
+  if (refMarketPrice > 0 && refPct !== null) {
     if (refPct <= 0) {
       verdict = 'profitable';
-      verdictText = `✅ 当前${dealPricePerSqm ? '成交' : '挂牌'}价低于盈亏平衡价 ${Math.abs(refPct)}%，持有成本 ≤ 持有收益`;
+      verdictText = `✅ 当前市场价低于纯现金流底线价 ${Math.abs(refPct)}%`;
     } else if (refPct <= 10) {
       verdict = 'marginal';
-      verdictText = `🟡 当前${dealPricePerSqm ? '成交' : '挂牌'}价略高于盈亏平衡价 ${refPct}%，接近临界点`;
+      verdictText = `🟡 当前市场价略高于纯现金流底线价 ${refPct}%`;
     } else {
       verdict = 'overpriced';
-      verdictText = `🔴 当前${dealPricePerSqm ? '成交' : '挂牌'}价高于盈亏平衡价 ${refPct}%，纯持有不划算`;
+      verdictText = `🔴 当前市场价高于纯现金流底线价 ${refPct}%`;
     }
   } else {
     verdict = 'no_data';
     verdictText = '暂无市场价格数据，无法对比';
   }
 
-  const wuan = (yuan: number) => Math.round((yuan / 10000) * 100) / 100;
-
   return {
-    breakEvenPricePerSqm: Math.round(breakEvenPricePerSqm),
+    breakEvenPricePerSqm,
     breakEvenTotalPriceWuan: wuan(breakEvenTotalPrice),
+    premiumParams,
+    totalReasonablePremiumRate,
+    targetFairPricePerSqm,
+    targetFairTotalPriceWuan,
+    bubbleGapPerSqm,
+    bubbleGapPct,
+    actionVerdict,
+    actionVerdictText,
     depreciationRate,
     buildingAge,
     bondOpportunityCost,
