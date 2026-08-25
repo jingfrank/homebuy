@@ -3,14 +3,16 @@
  *
  * 核心公式：年化持有成本 = 年化持有收益（净租金）
  *
- * 持有成本 = ① 国债利率 × 首付额（自有资金机会成本）
- *          + ② 折旧率 × 房价（物理折旧，按楼龄分段）
- *          + ③ 加权贷款利率 × 贷款额（公积金+商贷组合）
+ * 持有成本 = ① 实际国债利率 × 首付额（自有资金实际机会成本）
+ *          + ② 折旧率 × 房价（物理折旧，按楼龄分段，不受通胀影响）
+ *          + ③ 实际贷款利率 × 贷款额（公积金+商贷组合，名义利率−通胀）
  *
  * 持有收益 = ④ 净年租金 = 月租金 × (12 − 空置月数) − 物业费 × 12
  *
- * 通胀对冲（Gordon增长模型）：租金随通胀增长，等价于要求的首年收益率降低 g%
- *   → 盈亏平衡净租金收益率 = 综合成本率 − 通胀率
+ * 实际利率思路：通胀分别从国债利率和贷款利率中减去，得到实际资金成本
+ *   实际国债利率 = 名义国债利率 − 通胀率
+ *   实际贷款利率 = 名义贷款利率 − 通胀率
+ *   → 盈亏平衡净租金收益率 = 综合实际成本率
  *   → 盈亏平衡房价 = 净年租金 ÷ 盈亏平衡净租金收益率
  */
 
@@ -201,14 +203,15 @@ export interface BreakEvenResult {
   actionVerdict: 'strong_buy' | 'fair_buy' | 'overpriced' | 'extreme_bubble';
   actionVerdictText: string;
 
-  // 成本端拆解（均为年化比率）
-  depreciationRate: number;     // 折旧率
+  // 成本端拆解（均为年化比率，已用实际利率）
+  depreciationRate: number;     // 折旧率（物理折旧，不扣通胀）
   buildingAge: number;          // 楼龄
-  bondOpportunityCost: number; // 国债机会成本率 = bondRate × dpRatio
-  loanCostRate: number;         // 贷款成本率 = weightedLoanRate × (1-dpRatio)
-  weightedLoanRate: number;    // 加权贷款年利率
-  inflationHedge: number;      // 通胀对冲 (负值，从成本中扣除)
-  totalCostRate: number;       // 综合成本率 (已扣除通胀)
+  realBondRate: number;         // 实际国债利率 = 名义国债利率 − 通胀
+  realWeightedLoanRate: number; // 实际加权贷款利率 = 名义加权利率 − 通胀
+  bondOpportunityCost: number; // 首付实际机会成本率 = realBondRate × dpRatio
+  loanCostRate: number;         // 贷款实际成本率 = realWeightedLoanRate × (1-dpRatio)
+  weightedLoanRate: number;    // 名义加权贷款年利率
+  totalCostRate: number;       // 综合实际成本率
 
   // 收益端
   netMonthlyRentPerSqm: number;   // 净月租金 (元/㎡/月)
@@ -258,8 +261,15 @@ export function computeBreakEven(
 
   const totalNetAnnualRent = netAnnualRentPerSqm * referenceArea; // 参考面积的总净年租金
 
-  // ── 成本端：分段求解盈亏平衡总价 P ──
-  const costRateAllProv = bondRate * dp + depreciationRate + providentRate * (1 - dp) - inflationRate;
+  // ── 成本端：实际利率思路，分段求解盈亏平衡总价 P ──
+  // 实际国债利率 = 名义国债利率 − 通胀
+  // 实际贷款利率 = 名义贷款利率 − 通胀
+  // 成本率 = 实际国债利率 × 首付 + 折旧 + 实际贷款利率 × 贷款
+  const realBondRate = bondRate - inflationRate;
+  const realProvRate = providentRate - inflationRate;
+  const realCommRate = commercialRate - inflationRate;
+
+  const costRateAllProv = realBondRate * dp + depreciationRate + realProvRate * (1 - dp);
   const P1 = costRateAllProv > 0 ? totalNetAnnualRent / costRateAllProv : Infinity;
   const allProvThreshold = providentLimit / (1 - dp);
 
@@ -272,8 +282,8 @@ export function computeBreakEven(
     weightedLoanRate = providentRate;
     loanType = 'all_provident';
   } else {
-    const baseCostRate = bondRate * dp + depreciationRate + commercialRate * (1 - dp) - inflationRate;
-    const provFundSavings = providentLimit * (commercialRate - providentRate);
+    const baseCostRate = realBondRate * dp + depreciationRate + realCommRate * (1 - dp);
+    const provFundSavings = providentLimit * (commercialRate - providentRate); // 公积金利率优惠（名义值之差，固定额）
     breakEvenTotalPrice = baseCostRate > 0
       ? (totalNetAnnualRent + provFundSavings) / baseCostRate
       : Infinity;
@@ -337,10 +347,11 @@ export function computeBreakEven(
   const providentLoanAmount = Math.min(totalLoanAmount, providentLimit);
   const commercialLoanAmount = Math.max(0, totalLoanAmount - providentLimit);
 
-  // ── 成本拆解 ──
-  const bondOpportunityCost = bondRate * dp;
-  const loanCostRate = weightedLoanRate * (1 - dp);
-  const totalCostRate = bondOpportunityCost + depreciationRate + loanCostRate - inflationRate;
+  // ── 成本拆解（实际利率） ──
+  const realWeightedLoanRate = weightedLoanRate - inflationRate;
+  const bondOpportunityCost = realBondRate * dp;
+  const loanCostRate = realWeightedLoanRate * (1 - dp);
+  const totalCostRate = bondOpportunityCost + depreciationRate + loanCostRate;
 
   // ── 对比分析 ──
   const askingPricePremiumPct = askingPricePerSqm && askingPricePerSqm > 0
@@ -384,10 +395,11 @@ export function computeBreakEven(
     actionVerdictText,
     depreciationRate,
     buildingAge,
+    realBondRate,
+    realWeightedLoanRate,
     bondOpportunityCost,
     loanCostRate,
     weightedLoanRate,
-    inflationHedge: -inflationRate,
     totalCostRate,
     netMonthlyRentPerSqm: Math.round(netMonthlyRentPerSqm * 100) / 100,
     netAnnualRentPerSqm: Math.round(netAnnualRentPerSqm * 100) / 100,

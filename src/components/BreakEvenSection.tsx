@@ -824,23 +824,29 @@ const BreakEvenCard: React.FC<{
         {/* 成本端 */}
         <div style={{ minWidth: 0 }}>
           <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px', color: 'var(--text-main)' }}>
-            💸 年化持有成本拆解（扣除通胀）
+            💸 年化持有成本拆解（实际利率）
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-            <CostRow label="首付机会成本 (国债收益)" detail={`国债${pct(params.bondRate)} × 首付${pct(params.downPaymentRatio)}`} rate={r.bondOpportunityCost} />
+            <CostRow
+              label="首付实际机会成本"
+              detail={`实际国债利率 ${pct(params.bondRate)}−${pct(params.inflationRate)}=${pct(r.realBondRate)} × 首付${pct(params.downPaymentRatio)}`}
+              rate={r.bondOpportunityCost}
+            />
             <CostRow label="房屋物理折旧与老化" detail={`楼龄${r.buildingAge}年 → 费率${pct(r.depreciationRate)}`} rate={r.depreciationRate} />
             <CostRow
-              label={r.loanType === 'mixed' ? '组合房贷利息成本' : '公积金贷款利息成本'}
+              label={r.loanType === 'mixed' ? '组合房贷实际利息成本' : '公积金贷款实际利息成本'}
               detail={r.loanType === 'mixed'
-                ? `加权利率${pct(r.weightedLoanRate)} × 贷款${pct(1 - params.downPaymentRatio)}`
-                : `公积金${pct(params.providentRate)} × 贷款${pct(1 - params.downPaymentRatio)}`}
+                ? `实际利率 ${pct(r.weightedLoanRate)}−${pct(params.inflationRate)}=${pct(r.realWeightedLoanRate)} × 贷款${pct(1 - params.downPaymentRatio)}`
+                : `实际利率 ${pct(params.providentRate)}−${pct(params.inflationRate)}=${pct(r.realBondRate)} × 贷款${pct(1 - params.downPaymentRatio)}`}
               rate={r.loanCostRate}
             />
-            <CostRow label="长期通胀租金增长对冲" detail={`长期通胀预期${pct(params.inflationRate)}`} rate={r.inflationHedge} negative />
             <div style={{ borderTop: '2px solid var(--border-color)', paddingTop: '6px', marginTop: '2px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>净综合持有成本率</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>综合实际持有成本率</span>
                 <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)' }}>{pct(r.totalCostRate)}</span>
+              </div>
+              <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                通胀已分别从国债与贷款利率中扣除，折旧不受通胀影响
               </div>
             </div>
           </div>
