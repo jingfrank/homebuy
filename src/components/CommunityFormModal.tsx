@@ -238,7 +238,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
             minHeight: 0,
             overflowY: 'auto',
             WebkitOverflowScrolling: 'touch',
-            padding: '18px 20px 24px 20px',
+            padding: '18px 20px 80px 20px',
             display: 'flex',
             flexDirection: 'column',
             gap: '20px',
