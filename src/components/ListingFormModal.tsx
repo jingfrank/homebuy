@@ -35,10 +35,10 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
         const defaultRent = suggestMonthlyRentByCommunity(89, avgRent);
         setFormData({
           unitNumber: '',
-          totalPrice: 400,
-          targetPrice: 370,
-          buildingArea: 89,
-          insideArea: 75,
+          totalPrice: undefined,
+          targetPrice: undefined,
+          buildingArea: undefined,
+          insideArea: undefined,
           layout: '3室2厅1卫',
           floorInfo: '中楼层 (8/18)',
           orientation: '南北通透',
@@ -48,7 +48,7 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
           rating: 5,
           notes: '',
           hasParkingSpace: false,
-          parkingPriceWuan: 0,
+          parkingPriceWuan: undefined,
           isSubNew: true,
           isNearMetro: true,
           isSweetSpotLayout: true,
@@ -166,6 +166,7 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
           maxWidth: '640px',
           width: '100%',
           maxHeight: '92vh',
+          height: '100%',
           background: '#ffffff',
           borderRadius: '20px',
           display: 'flex',
@@ -178,24 +179,22 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
         {/* Sticky Header */}
         <header
           style={{
-            padding: '18px 22px',
+            padding: '16px 20px',
             borderBottom: '1px solid var(--border-color)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             background: '#ffffff',
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
+            flexShrink: 0,
+            zIndex: 2,
           }}
         >
           <div>
-            <h2 id="listing-modal-title" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
-              {editingListing ? '✏️ 编辑房源档案' : '🏠 录入新房源'}
+            <h2 id="listing-modal-title" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>
+              {editingListing ? '✏️ 编辑房源档案' : '🏠 录入新房源信息'}
             </h2>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              所属小区：<strong style={{ color: 'var(--primary)' }}>{activeCommunity?.name || '未知小区'}</strong>
-              {activeCommunity?.district && ` · ${activeCommunity.district}`}
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              所属小区：<strong style={{ color: 'var(--primary)' }}>{activeCommunity?.name || '未知小区'}</strong> ({activeCommunity?.district} · {activeCommunity?.sector})
             </div>
           </div>
 
@@ -217,15 +216,19 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
           </button>
         </header>
 
-        {/* Scrollable Form Body */}
+        {/* Scrollable Form Body (Single scrollable container, unblocked) */}
         <form
           onSubmit={handleSubmit}
           className="modal-scroll-body"
           style={{
-            padding: '20px 22px 100px 22px',
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            padding: '18px 20px 24px 20px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '22px',
+            gap: '20px',
           }}
         >
           {formError && (
@@ -245,44 +248,38 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
             </div>
           )}
 
-          {/* Group 1: Unit & Layout */}
+          {/* Group 1: Basic Unit & Layout */}
           <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <legend style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              📌 1. 栋号、格局与装修
+              📍 1. 房源位置与户型结构
             </legend>
 
             <div>
               <label htmlFor="listing-unit-number" style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>
-                栋号 / 门牌号 <span style={{ color: 'var(--danger)' }}>*</span>
+                房号 / 栋号信息 <span style={{ color: 'var(--danger)' }}>*</span>
               </label>
               <input
                 id="listing-unit-number"
                 type="text"
-                placeholder="如：8号楼 1202室 (或 8号楼中层)"
-                value={formData.unitNumber}
+                placeholder="如：6号楼 1102室 或 8号楼中层西边套"
+                value={formData.unitNumber || ''}
                 onChange={(e) => setFormData({ ...formData, unitNumber: e.target.value })}
                 required
               />
-              <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: '4px', display: 'block' }}>
-                💡 提示：链家/贝壳出于隐私默认隐藏房号，可先填写“8号楼中层”或向中介询问。
-              </span>
             </div>
 
-            {/* Layout Quick-Pick */}
+            {/* Layout Quick Selector */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label htmlFor="listing-layout" style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                  户型格局
-                </label>
-                <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>快捷点选：</span>
-              </div>
+              <label htmlFor="listing-layout" style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>
+                户型格局
+              </label>
               <input
                 id="listing-layout"
                 type="text"
-                value={formData.layout}
-                onChange={(e) => setFormData({ ...formData, layout: e.target.value })}
                 placeholder="如：3室2厅1卫"
-                style={{ marginBottom: '8px' }}
+                value={formData.layout || ''}
+                onChange={(e) => setFormData({ ...formData, layout: e.target.value })}
+                style={{ marginBottom: '6px' }}
               />
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {COMMON_LAYOUTS.map((layout) => (
@@ -292,8 +289,8 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                     onClick={() => setFormData({ ...formData, layout })}
                     style={{
                       fontSize: '0.75rem',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
                       background: formData.layout === layout ? 'var(--primary-light)' : '#f1f5f9',
                       color: formData.layout === layout ? 'var(--primary)' : 'var(--text-muted)',
                       border: formData.layout === layout ? '1px solid var(--primary)' : '1px solid var(--border-color)',
@@ -349,7 +346,7 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                   id="listing-floor"
                   type="text"
                   placeholder="如：中楼层 (8/18)"
-                  value={formData.floorInfo}
+                  value={formData.floorInfo || ''}
                   onChange={(e) => setFormData({ ...formData, floorInfo: e.target.value })}
                   style={{ marginBottom: '6px' }}
                 />
@@ -382,7 +379,7 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                   id="listing-orientation"
                   type="text"
                   placeholder="如：南北通透"
-                  value={formData.orientation}
+                  value={formData.orientation || ''}
                   onChange={(e) => setFormData({ ...formData, orientation: e.target.value })}
                   style={{ marginBottom: '6px' }}
                 />
@@ -425,8 +422,9 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                   id="listing-total-price"
                   type="number"
                   step="1"
-                  value={formData.totalPrice}
-                  onChange={(e) => setFormData({ ...formData, totalPrice: parseFloat(e.target.value) || 0 })}
+                  placeholder="如 400"
+                  value={formData.totalPrice ?? ''}
+                  onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                   required
                 />
               </div>
@@ -439,8 +437,9 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                   id="listing-target-price"
                   type="number"
                   step="1"
-                  value={formData.targetPrice}
-                  onChange={(e) => setFormData({ ...formData, targetPrice: parseFloat(e.target.value) || 0 })}
+                  placeholder="如 370"
+                  value={formData.targetPrice ?? ''}
+                  onChange={(e) => setFormData({ ...formData, targetPrice: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                 />
               </div>
             </div>
@@ -455,8 +454,9 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                   id="listing-building-area"
                   type="number"
                   step="0.5"
-                  value={formData.buildingArea}
-                  onChange={(e) => setFormData({ ...formData, buildingArea: parseFloat(e.target.value) || 0 })}
+                  placeholder="如 89"
+                  value={formData.buildingArea ?? ''}
+                  onChange={(e) => setFormData({ ...formData, buildingArea: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                   required
                 />
               </div>
@@ -469,8 +469,9 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                   id="listing-inside-area"
                   type="number"
                   step="0.5"
-                  value={formData.insideArea}
-                  onChange={(e) => setFormData({ ...formData, insideArea: parseFloat(e.target.value) || 0 })}
+                  placeholder="如 75"
+                  value={formData.insideArea ?? ''}
+                  onChange={(e) => setFormData({ ...formData, insideArea: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                 />
               </div>
             </div>
@@ -493,13 +494,13 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>折合挂牌单价：</span>
                 <strong className="tabular-nums" style={{ color: 'var(--text-main)', fontSize: '0.95rem' }}>
-                  {calculatedUnitPrice.toLocaleString()} 元/㎡
+                  {calculatedUnitPrice > 0 ? calculatedUnitPrice.toLocaleString() : '—'} 元/㎡
                 </strong>
               </div>
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>实得率：</span>
                 <strong className="tabular-nums" style={{ color: calculatedPracticalRatio >= 75 ? 'var(--primary)' : 'var(--warning)', fontSize: '0.95rem' }}>
-                  {calculatedPracticalRatio}%
+                  {calculatedPracticalRatio > 0 ? `${calculatedPracticalRatio}%` : '—'}
                 </strong>
               </div>
             </div>
@@ -518,13 +519,12 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                       fontSize: '0.75rem',
                       color: 'var(--primary)',
                       fontWeight: 700,
-                      background: 'var(--primary-light)',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(5, 150, 105, 0.2)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
                     }}
                   >
-                    ⚡ 按小区均价自动推算
+                    💡 按小区租金单价测算
                   </button>
                 )}
               </div>
@@ -532,151 +532,163 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                 id="listing-expected-rent"
                 type="number"
                 step="100"
-                value={formData.expectedMonthlyRent}
-                onChange={(e) => setFormData({ ...formData, expectedMonthlyRent: parseFloat(e.target.value) || 0 })}
+                placeholder="如 4500"
+                value={formData.expectedMonthlyRent ?? ''}
+                onChange={(e) => setFormData({ ...formData, expectedMonthlyRent: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
               />
             </div>
           </fieldset>
 
           {/* Group 3: Parking Space */}
-          <fieldset style={{ border: 'none', padding: 0 }}>
+          <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <legend style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🚗 3. 车位与产权
+              🚗 3. 车位产权与价格
             </legend>
-            <div
-              style={{
-                background: formData.hasParkingSpace ? 'var(--primary-light)' : '#f8fafc',
-                padding: '14px',
-                borderRadius: '12px',
-                border: formData.hasParkingSpace ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-              }}
-            >
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <input
+                id="listing-has-parking"
+                type="checkbox"
+                checked={formData.hasParkingSpace || false}
+                onChange={(e) => setFormData({ ...formData, hasParkingSpace: e.target.checked })}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+              />
+              <label htmlFor="listing-has-parking" style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}>
+                本房源包含产权车位 (总价已含/随房出售)
+              </label>
+            </div>
+
+            {formData.hasParkingSpace && (
+              <div>
+                <label htmlFor="listing-parking-price" style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>
+                  车位估值 / 单独作价 (万元)
+                </label>
+                <input
+                  id="listing-parking-price"
+                  type="number"
+                  step="1"
+                  placeholder="如 15"
+                  value={formData.parkingPriceWuan ?? ''}
+                  onChange={(e) => setFormData({ ...formData, parkingPriceWuan: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
+                />
+              </div>
+            )}
+          </fieldset>
+
+          {/* Group 4: Liquidity Tags & Risk Checklist */}
+          <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <legend style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ⚡ 4. 户型通透流动性与硬伤折价排查
+            </legend>
+
+            {/* Sweet Spot Liquidity Checklist */}
+            <div style={{ background: 'rgba(5, 150, 105, 0.04)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(5, 150, 105, 0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '0.825rem', fontWeight: 800, color: 'var(--primary)' }}>
+                🌟 流动性硬通货特征 (加分项)
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
-                  checked={!!formData.hasParkingSpace}
-                  onChange={(e) => setFormData({ ...formData, hasParkingSpace: e.target.checked })}
-                  style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }}
+                  checked={formData.isSubNew || false}
+                  onChange={(e) => setFormData({ ...formData, isSubNew: e.target.checked })}
+                  style={{ accentColor: 'var(--primary)' }}
                 />
-                本房源包含 / 赠送产权地下车位
+                次新房 (楼龄 &le; 10年，流通性高)
               </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.isNearMetro || false}
+                  onChange={(e) => setFormData({ ...formData, isNearMetro: e.target.checked })}
+                  style={{ accentColor: 'var(--primary)' }}
+                />
+                正轨交房 (步行 &le; 600米)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.isSweetSpotLayout || false}
+                  onChange={(e) => setFormData({ ...formData, isSweetSpotLayout: e.target.checked })}
+                  style={{ accentColor: 'var(--primary)' }}
+                />
+                主力通透户型 (南北通透 / 经典飞机户型 / 边套全明)
+              </label>
+            </div>
 
-              {formData.hasParkingSpace && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
-                  <label htmlFor="parking-price" style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                    车位打包估值 (万元)：
-                  </label>
-                  <input
-                    id="parking-price"
-                    type="number"
-                    value={formData.parkingPriceWuan}
-                    onChange={(e) => setFormData({ ...formData, parkingPriceWuan: parseFloat(e.target.value) || 0 })}
-                    style={{ width: '100px', padding: '6px 10px' }}
-                  />
-                </div>
-              )}
+            {/* Risk Discount Checklist */}
+            <div style={{ background: 'rgba(220, 38, 38, 0.04)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(220, 38, 38, 0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '0.825rem', fontWeight: 800, color: 'var(--danger)' }}>
+                ⚠️ 显著硬伤折价排查 (自动计算建议砍价安全边际)
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.hasAgeRisk || false}
+                  onChange={(e) => setFormData({ ...formData, hasAgeRisk: e.target.checked })}
+                  style={{ accentColor: 'var(--danger)' }}
+                />
+                楼龄超20年老破小/老破大 (折价 -10%)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.hasLayoutNoiseRisk || false}
+                  onChange={(e) => setFormData({ ...formData, hasLayoutNoiseRisk: e.target.checked })}
+                  style={{ accentColor: 'var(--danger)' }}
+                />
+                紧邻高架/主干道/变电站/异形手枪户型 (折价 -8%)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.hasParkingPropertyRisk || false}
+                  onChange={(e) => setFormData({ ...formData, hasParkingPropertyRisk: e.target.checked })}
+                  style={{ accentColor: 'var(--danger)' }}
+                />
+                无固定车位且极度难停 / 物业管理混乱 (折价 -5%)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.hasMetroDistanceRisk || false}
+                  onChange={(e) => setFormData({ ...formData, hasMetroDistanceRisk: e.target.checked })}
+                  style={{ accentColor: 'var(--danger)' }}
+                />
+                轨交距离 &gt; 1.5公里 依赖公交接驳 (折价 -5%)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.hasSchoolPolicyRisk || false}
+                  onChange={(e) => setFormData({ ...formData, hasSchoolPolicyRisk: e.target.checked })}
+                  style={{ accentColor: 'var(--danger)' }}
+                />
+                学区超额预警 / 五年一户名额已被占用 (折价 -10%)
+              </label>
             </div>
           </fieldset>
 
-          {/* Group 4: Liquidity Highlights & Risk Checks (Big Tactile Chips) */}
+          {/* Group 5: Floorplan & Notes */}
           <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <legend style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ⚡ 4. 流动性优势与缺陷排查 (点击增删)
-            </legend>
-
-            {/* Positive Highlights */}
-            <div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', display: 'block', marginBottom: '6px' }}>
-                ✨ 优势亮点 (加分项)：
-              </span>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {[
-                  { key: 'isSubNew', label: '✨ 10年内次新房' },
-                  { key: 'isNearMetro', label: '🚇 步行500m正地铁房' },
-                  { key: 'isSweetSpotLayout', label: '📐 80-110㎡黄金主力户型' },
-                ].map((item) => {
-                  const isChecked = Boolean((formData as any)[item.key]);
-                  return (
-                    <button
-                      key={item.key}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, [item.key]: !isChecked })}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '9999px',
-                        fontSize: '0.8rem',
-                        fontWeight: isChecked ? 700 : 500,
-                        background: isChecked ? 'var(--primary)' : '#f1f5f9',
-                        color: isChecked ? '#ffffff' : 'var(--text-muted)',
-                        border: isChecked ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-                        minHeight: '34px',
-                      }}
-                    >
-                      {isChecked ? `✓ ${item.label}` : `+ ${item.label}`}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Risk Discount Factors */}
-            <div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--danger)', display: 'block', marginBottom: '6px' }}>
-                ⚠️ 缺陷与风险扣减项 (建议砍价)：
-              </span>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {[
-                  { key: 'hasAgeRisk', label: '⚠️ 房龄>20年 (-10%)' },
-                  { key: 'hasLayoutNoiseRisk', label: '⚠️ 临高架/顶底楼/暗卫 (-10%)' },
-                  { key: 'hasParkingPropertyRisk', label: '⚠️ 车位紧张/物业差 (-6%)' },
-                  { key: 'hasMetroDistanceRisk', label: '⚠️ 离轨交>1.5km (-8%)' },
-                  { key: 'hasSchoolPolicyRisk', label: '⚠️ 学区溢价剥离风险 (-15%)' },
-                ].map((item) => {
-                  const isChecked = Boolean((formData as any)[item.key]);
-                  return (
-                    <button
-                      key={item.key}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, [item.key]: !isChecked })}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '9999px',
-                        fontSize: '0.8rem',
-                        fontWeight: isChecked ? 700 : 500,
-                        background: isChecked ? 'var(--danger-bg)' : '#f1f5f9',
-                        color: isChecked ? 'var(--danger)' : 'var(--text-muted)',
-                        border: isChecked ? '1.5px solid var(--danger)' : '1px solid var(--border-color)',
-                        minHeight: '34px',
-                      }}
-                    >
-                      {isChecked ? `✓ ${item.label}` : `+ ${item.label}`}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </fieldset>
-
-          {/* Group 5: Photo & Notes */}
-          <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <legend style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              📷 5. 户型图与看房随记
+              🖼️ 5. 户型图与看房笔记
             </legend>
 
             <div>
-              <label htmlFor="listing-floorplan" style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>
-                上传/更新户型图照片
+              <label style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>
+                户型图上传 (支持 JPG / PNG)
               </label>
               <input
-                id="listing-floorplan"
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
-                style={{ padding: '8px' }}
+                style={{ padding: '8px', fontSize: '0.85rem' }}
               />
+              {formData.floorplanUrl && (
+                <div style={{ marginTop: '8px', width: '100%', height: '140px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <img src={formData.floorplanUrl} alt="户型预览" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                </div>
+              )}
             </div>
 
             <div>
@@ -687,25 +699,25 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
                 id="listing-notes"
                 rows={3}
                 placeholder="记录采光遮挡、通风、噪音、业主出国急售等私聊内幕…"
-                value={formData.notes}
+                value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
             </div>
           </fieldset>
         </form>
 
-        {/* Sticky Bottom Action Bar (Thumb-Friendly on Mobile) */}
+        {/* Sticky Bottom Action Bar (Unobstructed, pinned at bottom) */}
         <footer
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'rgba(255, 255, 255, 0.95)',
+            position: 'relative',
+            flexShrink: 0,
+            width: '100%',
+            background: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             borderTop: '1px solid var(--border-color)',
-            padding: '12px 22px',
+            padding: '12px 20px',
+            paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',

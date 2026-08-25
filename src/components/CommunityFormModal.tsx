@@ -57,7 +57,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
         askingAvgUnitPriceYuan: undefined,
         dealAvgUnitPriceYuan: undefined,
         rentSamples: [],
-        avgRentUnitPricePerSqm: 0,
+        avgRentUnitPricePerSqm: undefined,
         ...communityData,
       });
       setShowAdvancedRent(Boolean(communityData?.rentSamples && communityData.rentSamples.length > 0));
@@ -106,7 +106,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
     setFormData((prev) => ({
       ...prev,
       rentSamples: updated,
-      avgRentUnitPricePerSqm: newAvg,
+      avgRentUnitPricePerSqm: newAvg > 0 ? newAvg : undefined,
     }));
   };
 
@@ -122,7 +122,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
     }
 
     const calculatedAvgRent = calculateCommunityAvgRentUnitPrice(formData.rentSamples);
-    const userRentInput = Number(formData.avgRentUnitPricePerSqm);
+    const userRentInput = formData.avgRentUnitPricePerSqm ? Number(formData.avgRentUnitPricePerSqm) : 0;
     const effectiveAvgRent = userRentInput > 0 ? userRentInput : (calculatedAvgRent > 0 ? calculatedAvgRent : 0);
 
     const finalComm: Community = {
@@ -179,6 +179,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
           maxWidth: '640px',
           width: '100%',
           maxHeight: '92vh',
+          height: '100%',
           background: '#ffffff',
           borderRadius: '20px',
           display: 'flex',
@@ -191,22 +192,21 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
         {/* Sticky Header */}
         <header
           style={{
-            padding: '18px 22px',
+            padding: '16px 20px',
             borderBottom: '1px solid var(--border-color)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             background: '#ffffff',
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
+            flexShrink: 0,
+            zIndex: 2,
           }}
         >
           <div>
-            <h2 id="community-modal-title" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
+            <h2 id="community-modal-title" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>
               {isEditing ? '✏️ 编辑小区档案' : '🏢 录入新意向小区'}
             </h2>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
               维护小区板块位置、容积率、车位比与配套画像
             </div>
           </div>
@@ -229,15 +229,19 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
           </button>
         </header>
 
-        {/* Scrollable Form Body */}
+        {/* Scrollable Form Body (Single scrollable container, unblocked) */}
         <form
           onSubmit={handleSubmit}
           className="modal-scroll-body"
           style={{
-            padding: '20px 22px 100px 22px',
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            padding: '18px 20px 24px 20px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '22px',
+            gap: '20px',
           }}
         >
           {formError && (
@@ -271,7 +275,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                 id="comm-name"
                 type="text"
                 placeholder="如：联洋年华 / 泗水和鸣"
-                value={formData.name}
+                value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
@@ -284,7 +288,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                 </label>
                 <select
                   id="comm-district"
-                  value={formData.district}
+                  value={formData.district || '浦东新区'}
                   onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                 >
                   {districts.filter((d) => d !== '全上海').map((d) => (
@@ -301,7 +305,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   id="comm-sector"
                   type="text"
                   placeholder="如：联洋板块 / 泗泾板块"
-                  value={formData.sector}
+                  value={formData.sector || ''}
                   onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
                   required
                 />
@@ -315,7 +319,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                 </label>
                 <select
                   id="comm-ring"
-                  value={formData.ringLocation}
+                  value={formData.ringLocation || '中外环'}
                   onChange={(e) => setFormData({ ...formData, ringLocation: e.target.value })}
                 >
                   {COMMON_RING_LOCATIONS.map((r) => (
@@ -332,8 +336,8 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   id="comm-year"
                   type="number"
                   placeholder="如 2018"
-                  value={formData.builtYear}
-                  onChange={(e) => setFormData({ ...formData, builtYear: parseInt(e.target.value) || 2015 })}
+                  value={formData.builtYear ?? ''}
+                  onChange={(e) => setFormData({ ...formData, builtYear: e.target.value === '' ? undefined : parseInt(e.target.value) })}
                 />
               </div>
             </div>
@@ -351,7 +355,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   容积率 (密度与采光)
                 </label>
                 <span className="tabular-nums" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
-                  {formData.plotRatio}
+                  {formData.plotRatio ?? 1.8}
                 </span>
               </div>
 
@@ -387,7 +391,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   id="comm-parking-ratio"
                   type="text"
                   placeholder="如：1:1.1"
-                  value={formData.parkingRatio}
+                  value={formData.parkingRatio || ''}
                   onChange={(e) => setFormData({ ...formData, parkingRatio: e.target.value })}
                 />
               </div>
@@ -401,8 +405,8 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   type="number"
                   step="0.1"
                   placeholder="如：3.2"
-                  value={formData.propertyFee}
-                  onChange={(e) => setFormData({ ...formData, propertyFee: parseFloat(e.target.value) || 0 })}
+                  value={formData.propertyFee ?? ''}
+                  onChange={(e) => setFormData({ ...formData, propertyFee: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                 />
               </div>
             </div>
@@ -422,7 +426,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                 id="comm-metro"
                 type="text"
                 placeholder="如：9号线泗泾站 350米 / 2号线科技馆站 800米"
-                value={formData.metroInfoText}
+                value={formData.metroInfoText || ''}
                 onChange={(e) => setFormData({ ...formData, metroInfoText: e.target.value })}
               />
             </div>
@@ -435,7 +439,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                 id="comm-school"
                 type="text"
                 placeholder="如：泗泾实验学校（九年一贯制）"
-                value={formData.schoolInfo}
+                value={formData.schoolInfo || ''}
                 onChange={(e) => setFormData({ ...formData, schoolInfo: e.target.value })}
               />
             </div>
@@ -448,7 +452,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
             </legend>
 
             {/* Price Row: Asking, Deal, and Rent Unit Price */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
               <div>
                 <label htmlFor="comm-asking-price" style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
                   挂牌均价 (元/㎡)
@@ -458,7 +462,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   type="number"
                   placeholder="如 82000"
                   value={formData.askingAvgUnitPriceYuan ?? ''}
-                  onChange={(e) => setFormData({ ...formData, askingAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  onChange={(e) => setFormData({ ...formData, askingAvgUnitPriceYuan: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                 />
               </div>
 
@@ -471,7 +475,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   type="number"
                   placeholder="如 74000"
                   value={formData.dealAvgUnitPriceYuan ?? ''}
-                  onChange={(e) => setFormData({ ...formData, dealAvgUnitPriceYuan: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  onChange={(e) => setFormData({ ...formData, dealAvgUnitPriceYuan: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                 />
               </div>
 
@@ -485,7 +489,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
                   step="0.1"
                   placeholder="如 55.0"
                   value={formData.avgRentUnitPricePerSqm ?? ''}
-                  onChange={(e) => setFormData({ ...formData, avgRentUnitPricePerSqm: e.target.value ? parseFloat(e.target.value) : 0 })}
+                  onChange={(e) => setFormData({ ...formData, avgRentUnitPricePerSqm: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
                   style={{
                     borderColor: 'var(--primary)',
                     background: 'rgba(5, 150, 105, 0.03)',
@@ -618,7 +622,7 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
 
                   {/* Sample List */}
                   {formData.rentSamples && formData.rentSamples.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '140px', overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
                       {formData.rentSamples.map((s) => (
                         <div
                           key={s.id}
@@ -664,18 +668,18 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
           </fieldset>
         </form>
 
-        {/* Sticky Bottom Action Bar (Thumb-Friendly on Mobile) */}
+        {/* Sticky Bottom Action Bar (Unobstructed, pinned at bottom) */}
         <footer
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'rgba(255, 255, 255, 0.95)',
+            position: 'relative',
+            flexShrink: 0,
+            width: '100%',
+            background: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             borderTop: '1px solid var(--border-color)',
-            padding: '12px 22px',
+            padding: '12px 20px',
+            paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',

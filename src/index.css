@@ -327,8 +327,7 @@ input[type="range"] {
     background: rgba(15, 23, 42, 0.6) !important;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+    overflow: hidden !important;
   }
 
   .modal-card-mobile {
@@ -341,8 +340,7 @@ input[type="range"] {
     box-shadow: none !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+    overflow: hidden !important;
     animation: fadeIn 0.18s ease-out forwards !important;
   }
 }
