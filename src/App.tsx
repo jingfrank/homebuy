@@ -6,6 +6,7 @@ import { LoginPage } from './components/LoginPage';
 import { AssessmentWizard } from './components/AssessmentWizard';
 import { RentVsBuySection } from './components/RentVsBuySection';
 import { MortgageCalculatorSection } from './components/MortgageCalculatorSection';
+import { BreakEvenSection } from './components/BreakEvenSection';
 import { MarketMatrixSection } from './components/MarketMatrixSection';
 import { ChecklistSection } from './components/ChecklistSection';
 import { CommunityLedgerSection } from './components/CommunityLedgerSection';
@@ -76,6 +77,7 @@ export function App() {
           {activeTab === 'notes' && <HousingNotesSection />}
           {activeTab === 'rent_vs_buy' && <RentVsBuySection />}
           {activeTab === 'mortgage' && <MortgageCalculatorSection />}
+          {activeTab === 'breakeven' && <BreakEvenSection />}
           {activeTab === 'checklist' && <ChecklistSection />}
         </div>
       </main>

@@ -26,3 +26,4 @@ data/*.db-shm
 *.njsproj
 *.sln
 *.sw?
+deploy.sh

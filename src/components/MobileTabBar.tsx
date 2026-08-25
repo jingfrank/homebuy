@@ -9,7 +9,7 @@ interface MobileTabBarProps {
 const MOBILE_TABS: { id: ActiveTab; label: string; emoji: string }[] = [
   { id: 'wizard',    label: '买房诊断', emoji: '🧭' },
   { id: 'community', label: '房源PK',   emoji: '🏢' },
-  { id: 'notes',     label: '看房随记', emoji: '📝' },
+  { id: 'breakeven', label: '盈亏平衡', emoji: '🎯' },
   { id: 'mortgage',  label: '房贷测算', emoji: '🧮' },
   { id: 'market',    label: '行情地图', emoji: '🌆' },
 ];

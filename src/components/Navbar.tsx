@@ -1,7 +1,7 @@
 import React from 'react';
 import { HomeIcon, TrendingUpIcon, CalculatorIcon, BuildingIcon, BookOpenIcon, SparklesIcon } from './Icons';
 
-export type ActiveTab = 'wizard' | 'rent_vs_buy' | 'mortgage' | 'market' | 'checklist' | 'community' | 'notes';
+export type ActiveTab = 'wizard' | 'rent_vs_buy' | 'mortgage' | 'market' | 'checklist' | 'community' | 'notes' | 'breakeven';
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -17,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onLogou
     { id: 'notes', label: '📝 置业情报与看房随记', icon: BookOpenIcon },
     { id: 'rent_vs_buy', label: '📈 买房vs租房 30年对比', icon: TrendingUpIcon },
     { id: 'mortgage', label: '🧮 房贷与极端压力测试', icon: CalculatorIcon },
+    { id: 'breakeven', label: '🎯 盈亏平衡价分析', icon: TrendingUpIcon },
     { id: 'checklist', label: '🛡️ 避坑指南Checklist', icon: BookOpenIcon },
   ];
 
