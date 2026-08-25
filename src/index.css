@@ -303,10 +303,13 @@ input[type="range"] {
     background: rgba(15, 23, 42, 0.6) !important;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .modal-card-mobile {
     width: 100% !important;
+    min-height: 100dvh !important;
     height: 100dvh !important;
     max-height: 100dvh !important;
     border-radius: 0 !important;
@@ -314,7 +317,9 @@ input[type="range"] {
     box-shadow: none !important;
     display: flex !important;
     flex-direction: column !important;
-    animation: fadeIn 0.2s ease-out forwards !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    animation: fadeIn 0.18s ease-out forwards !important;
   }
 }
 

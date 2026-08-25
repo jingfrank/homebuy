@@ -51,14 +51,6 @@ export const HousingNotesSection: React.FC = () => {
 
   const quickTags = ['#雨天看房实测', '#业主降价急售', '#底价可砍', '#学区划片', '#车位充裕', '#采光无遮挡', '#商贷利率'];
 
-  useEffect(() => {
-    if (isAddModalOpen) {
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = '';
-      };
-    }
-  }, [isAddModalOpen]);
 
   const filteredNotes = notes.filter((n) => {
     const matchCategory = selectedCategory === 'all' || n.category === selectedCategory;

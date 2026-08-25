@@ -28,7 +28,6 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       if (editingListing) {
         setFormData({ ...editingListing });
       } else {
@@ -61,9 +60,6 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
         });
       }
       setFormError('');
-      return () => {
-        document.body.style.overflow = '';
-      };
     }
   }, [isOpen, editingListing, activeCommunity]);
 

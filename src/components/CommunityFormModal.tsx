@@ -38,7 +38,6 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       setFormData({
         district: '浦东新区',
         sector: '',
@@ -63,9 +62,6 @@ export const CommunityFormModal: React.FC<CommunityFormModalProps> = ({
       });
       setShowAdvancedRent(Boolean(communityData?.rentSamples && communityData.rentSamples.length > 0));
       setFormError('');
-      return () => {
-        document.body.style.overflow = '';
-      };
     }
   }, [isOpen, communityData]);
 
