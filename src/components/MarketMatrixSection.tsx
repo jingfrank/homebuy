@@ -164,7 +164,6 @@ export const MarketMatrixSection: React.FC = () => {
         style={{
           padding: '24px',
           background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(248, 250, 252, 0.9) 100%)',
-          borderLeft: '5px solid var(--primary)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>

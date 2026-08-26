@@ -65,6 +65,9 @@ Functional Status Indicators:
 ### 4.2 Cards & Data Containers
 - **Elevation Hierarchy:** Generously rounded corners (`border-radius: 14px`), diffused soft shadow (`box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04)`), 1px crisp border (`#E2E8F0`).
 - **Card Hover:** Subtle elevation lift (`box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08)`), border transitions to `#CBD5E1`.
+- **Border & Corner Rule (Drop Either Radius or Left Border):** Strictly **NEVER** combine a `border-radius` with a thick colored `border-left` accent (the generic "AI card" cliché with awkward corner geometry).
+  - *Option A (Default Rounded):* Keep `border-radius: 14px` with a uniform 1px `#E2E8F0` border. Use interior status badges, subtle background tints, or top tags for categorization.
+  - *Option B (Sharp Accent):* If a colored left-indicator border is strictly required, remove the border radius completely (`border-radius: 0px`) to maintain sharp, intentional architectural geometry.
 
 ### 4.3 Form Inputs & Selects
 - **Hierarchy:** Form label placed strictly above the control (`font-weight: 700, font-size: 0.85rem`), helper text optional, inline error container below with `aria-live="polite"`.
@@ -107,12 +110,13 @@ Functional Status Indicators:
 
 ## 7. Anti-Patterns & Banned AI Clichés
 
-1. **NO Global `overflow-x: hidden` as a Layout Band-Aid:** Never apply `overflow-x: hidden` on `html`, `body`, or `#root` to mask wide overflowing content. This creates clipped "half-page" views on mobile by hiding the right side off-screen without fixing the root cause. All child elements must be genuinely fluid.
-2. **NO Hardcoded Grid Minimums:** Never use `minmax(300px+, 1fr)` without `min(100%, ...)`.
-3. **NO Emojis in Core Data:** No emojis inside formal quantitative columns or official export data (visual badge icons only).
-4. **NO `Inter` Font:** Use `Plus Jakarta Sans` / `Geist` for distinctive typographic brand identity.
-5. **NO Pure Black (`#000000`):** Use Deep Slate Ink (`#0F172A`).
-6. **NO Purple/Cyan Neon Glows:** Keep aesthetic grounded in authentic architectural emerald and slate.
-7. **NO 3-Equal-Card Monotony:** Use asymmetric split layouts, highlight badges, and weighted visual hierarchy.
-8. **NO Fabricated Metrics:** Never display fake SLA percentages or AI jargon ("100% Seamless", "Next-Gen AI").
-9. **NO Unanchored Floating Spinners:** All asynchronous operations must use structured layout skeleton placeholders.
+1. **NO Rounded Card with a Colored Left-Border Accent:** Drop either the radius or the left border. A rounded card (`border-radius: 12px+`) with a thick colored left accent border (`border-left: 4px/5px/6px solid ...`) creates awkward corner intersection artifacts and screams low-taste AI template. Use clean uniform borders with badges or top highlight bars instead.
+2. **NO Global `overflow-x: hidden` as a Layout Band-Aid:** Never apply `overflow-x: hidden` on `html`, `body`, or `#root` to mask wide overflowing content. This creates clipped "half-page" views on mobile by hiding the right side off-screen without fixing the root cause. All child elements must be genuinely fluid.
+3. **NO Hardcoded Grid Minimums:** Never use `minmax(300px+, 1fr)` without `min(100%, ...)`.
+4. **NO Emojis in Core Data:** No emojis inside formal quantitative columns or official export data (visual badge icons only).
+5. **NO `Inter` Font:** Use `Plus Jakarta Sans` / `Geist` for distinctive typographic brand identity.
+6. **NO Pure Black (`#000000`):** Use Deep Slate Ink (`#0F172A`).
+7. **NO Purple/Cyan Neon Glows:** Keep aesthetic grounded in authentic architectural emerald and slate.
+8. **NO 3-Equal-Card Monotony:** Use asymmetric split layouts, highlight badges, and weighted visual hierarchy.
+9. **NO Fabricated Metrics:** Never display fake SLA percentages or AI jargon ("100% Seamless", "Next-Gen AI").
+10. **NO Unanchored Floating Spinners:** All asynchronous operations must use structured layout skeleton placeholders.

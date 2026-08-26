@@ -164,7 +164,6 @@ export const BreakEvenSection: React.FC = () => {
         style={{
           padding: '22px',
           background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(248, 250, 252, 0.9) 100%)',
-          borderLeft: '5px solid var(--primary)',
           width: '100%',
           maxWidth: '100%',
           minWidth: 0,
@@ -484,12 +483,6 @@ const BreakEvenCard: React.FC<{
       className="glass-card animate-fade-in mobile-p-14"
       style={{
         padding: '22px',
-        borderLeft: `6px solid ${
-          r.actionVerdict === 'strong_buy' ? 'var(--success)'
-          : r.actionVerdict === 'fair_buy' ? 'var(--primary)'
-          : r.actionVerdict === 'overpriced' ? 'var(--warning)'
-          : 'var(--danger)'
-        }`,
         width: '100%',
         maxWidth: '100%',
         minWidth: 0,

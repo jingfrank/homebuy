@@ -144,7 +144,6 @@ export const HousingNotesSection: React.FC = () => {
         style={{
           padding: '24px',
           background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(248, 250, 252, 0.9) 100%)',
-          borderLeft: '5px solid var(--primary)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -288,7 +287,6 @@ export const HousingNotesSection: React.FC = () => {
                 style={{
                   padding: '22px',
                   background: '#ffffff',
-                  borderLeft: `5px solid ${note.importance === 'high' ? 'var(--danger)' : 'var(--primary)'}`,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
