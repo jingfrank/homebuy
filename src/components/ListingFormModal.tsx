@@ -545,18 +545,31 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
               🚗 3. 车位产权与价格
             </legend>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <label
+              htmlFor="listing-has-parking"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                background: formData.hasParkingSpace ? 'rgba(5, 150, 105, 0.08)' : '#ffffff',
+                border: formData.hasParkingSpace ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
               <input
                 id="listing-has-parking"
                 type="checkbox"
                 checked={formData.hasParkingSpace || false}
                 onChange={(e) => setFormData({ ...formData, hasParkingSpace: e.target.checked })}
-                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)', flexShrink: 0 }}
               />
-              <label htmlFor="listing-has-parking" style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}>
-                本房源包含产权车位 (总价已含/随房出售)
-              </label>
-            </div>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                本房源包含产权车位 (总价已含 / 随房出售)
+              </span>
+            </label>
 
             {formData.hasParkingSpace && (
               <div>
@@ -576,95 +589,279 @@ export const ListingFormModal: React.FC<ListingFormModalProps> = ({
           </fieldset>
 
           {/* Group 4: Liquidity Tags & Risk Checklist */}
-          <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <fieldset style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <legend style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               ⚡ 4. 户型通透流动性与硬伤折价排查
             </legend>
 
             {/* Sweet Spot Liquidity Checklist */}
-            <div style={{ background: 'rgba(5, 150, 105, 0.04)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(5, 150, 105, 0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '0.825rem', fontWeight: 800, color: 'var(--primary)' }}>
-                🌟 流动性硬通货特征 (加分项)
+            <div style={{
+              background: '#f8fafc',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(5, 150, 105, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  🌟 流动性硬通货特征 (抗跌溢价加分项)
+                </span>
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.isSubNew || false}
-                  onChange={(e) => setFormData({ ...formData, isSubNew: e.target.checked })}
-                  style={{ accentColor: 'var(--primary)' }}
-                />
-                次新房 (楼龄 &le; 10年，流通性高)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.isNearMetro || false}
-                  onChange={(e) => setFormData({ ...formData, isNearMetro: e.target.checked })}
-                  style={{ accentColor: 'var(--primary)' }}
-                />
-                正轨交房 (步行 &le; 600米)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.isSweetSpotLayout || false}
-                  onChange={(e) => setFormData({ ...formData, isSweetSpotLayout: e.target.checked })}
-                  style={{ accentColor: 'var(--primary)' }}
-                />
-                主力通透户型 (南北通透 / 经典飞机户型 / 边套全明)
-              </label>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* isSubNew */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.isSubNew ? 'rgba(5, 150, 105, 0.08)' : '#ffffff',
+                  border: formData.isSubNew ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.isSubNew || false}
+                    onChange={(e) => setFormData({ ...formData, isSubNew: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--primary)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>次新房品质</span>
+                      <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>楼龄 ≤ 10年</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      外立面完好、人车分流、物业管理优质，未来二手流动性高
+                    </div>
+                  </div>
+                </label>
+
+                {/* isNearMetro */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.isNearMetro ? 'rgba(5, 150, 105, 0.08)' : '#ffffff',
+                  border: formData.isNearMetro ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.isNearMetro || false}
+                    onChange={(e) => setFormData({ ...formData, isNearMetro: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--primary)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>正轨交房</span>
+                      <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>步行 ≤ 600米</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      真实步行可达地铁站，非公交接驳盘，刚需白领租售硬通货
+                    </div>
+                  </div>
+                </label>
+
+                {/* isSweetSpotLayout */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.isSweetSpotLayout ? 'rgba(5, 150, 105, 0.08)' : '#ffffff',
+                  border: formData.isSweetSpotLayout ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.isSweetSpotLayout || false}
+                    onChange={(e) => setFormData({ ...formData, isSweetSpotLayout: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--primary)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>主力通透格局</span>
+                      <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>通透 / 边套全明</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      南北通透、客餐厅一体、双卧朝南或经典飞机户型，无暗间
+                    </div>
+                  </div>
+                </label>
+              </div>
             </div>
 
             {/* Risk Discount Checklist */}
-            <div style={{ background: 'rgba(220, 38, 38, 0.04)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(220, 38, 38, 0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '0.825rem', fontWeight: 800, color: 'var(--danger)' }}>
-                ⚠️ 显著硬伤折价排查 (自动计算建议砍价安全边际)
+            <div style={{
+              background: '#fff8f8',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(220, 38, 38, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  ⚠️ 显著硬伤折价排查 (自动计入建议砍价空间)
+                </span>
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.hasAgeRisk || false}
-                  onChange={(e) => setFormData({ ...formData, hasAgeRisk: e.target.checked })}
-                  style={{ accentColor: 'var(--danger)' }}
-                />
-                楼龄超20年老破小/老破大 (折价 -10%)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.hasLayoutNoiseRisk || false}
-                  onChange={(e) => setFormData({ ...formData, hasLayoutNoiseRisk: e.target.checked })}
-                  style={{ accentColor: 'var(--danger)' }}
-                />
-                紧邻高架/主干道/变电站/异形手枪户型 (折价 -8%)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.hasParkingPropertyRisk || false}
-                  onChange={(e) => setFormData({ ...formData, hasParkingPropertyRisk: e.target.checked })}
-                  style={{ accentColor: 'var(--danger)' }}
-                />
-                无固定车位且极度难停 / 物业管理混乱 (折价 -5%)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.hasMetroDistanceRisk || false}
-                  onChange={(e) => setFormData({ ...formData, hasMetroDistanceRisk: e.target.checked })}
-                  style={{ accentColor: 'var(--danger)' }}
-                />
-                轨交距离 &gt; 1.5公里 依赖公交接驳 (折价 -5%)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.hasSchoolPolicyRisk || false}
-                  onChange={(e) => setFormData({ ...formData, hasSchoolPolicyRisk: e.target.checked })}
-                  style={{ accentColor: 'var(--danger)' }}
-                />
-                学区超额预警 / 五年一户名额已被占用 (折价 -10%)
-              </label>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* hasAgeRisk */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.hasAgeRisk ? 'rgba(220, 38, 38, 0.08)' : '#ffffff',
+                  border: formData.hasAgeRisk ? '1.5px solid var(--danger)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.hasAgeRisk || false}
+                    onChange={(e) => setFormData({ ...formData, hasAgeRisk: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--danger)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>超20年老破小 / 老破大</span>
+                      <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>折价 -10%</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      商业贷款年限受限，水暖管道老化，无电梯或物业维护缺失
+                    </div>
+                  </div>
+                </label>
+
+                {/* hasLayoutNoiseRisk */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.hasLayoutNoiseRisk ? 'rgba(220, 38, 38, 0.08)' : '#ffffff',
+                  border: formData.hasLayoutNoiseRisk ? '1.5px solid var(--danger)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.hasLayoutNoiseRisk || false}
+                    onChange={(e) => setFormData({ ...formData, hasLayoutNoiseRisk: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--danger)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>高架噪音 / 变电站 / 异形手枪户型</span>
+                      <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>折价 -8%</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      主干道噪音粉尘、异形缺角浪费面积、或采光常年被高楼遮挡
+                    </div>
+                  </div>
+                </label>
+
+                {/* hasParkingPropertyRisk */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.hasParkingPropertyRisk ? 'rgba(220, 38, 38, 0.08)' : '#ffffff',
+                  border: formData.hasParkingPropertyRisk ? '1.5px solid var(--danger)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.hasParkingPropertyRisk || false}
+                    onChange={(e) => setFormData({ ...formData, hasParkingPropertyRisk: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--danger)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>无固定车位极度难停 / 物业管理混乱</span>
+                      <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>折价 -5%</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      车位配比严重不足(&lt;1:0.5)，下班抢车位，垃圾清运不及时
+                    </div>
+                  </div>
+                </label>
+
+                {/* hasMetroDistanceRisk */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.hasMetroDistanceRisk ? 'rgba(220, 38, 38, 0.08)' : '#ffffff',
+                  border: formData.hasMetroDistanceRisk ? '1.5px solid var(--danger)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.hasMetroDistanceRisk || false}
+                    onChange={(e) => setFormData({ ...formData, hasMetroDistanceRisk: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--danger)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>轨交距离 &gt; 1.5公里 (假轨交房)</span>
+                      <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>折价 -5%</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      步行时间 &gt; 20分钟，依赖公交或电瓶车接驳，恶劣天气通勤困难
+                    </div>
+                  </div>
+                </label>
+
+                {/* hasSchoolPolicyRisk */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  background: formData.hasSchoolPolicyRisk ? 'rgba(220, 38, 38, 0.08)' : '#ffffff',
+                  border: formData.hasSchoolPolicyRisk ? '1.5px solid var(--danger)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.hasSchoolPolicyRisk || false}
+                    onChange={(e) => setFormData({ ...formData, hasSchoolPolicyRisk: e.target.checked })}
+                    style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--danger)', flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                      <span>学区超额预警 / 五年一户名额被占</span>
+                      <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>折价 -10%</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                      落户年限不够面临被统筹分流，或前业主学额尚未释放
+                    </div>
+                  </div>
+                </label>
+              </div>
             </div>
           </fieldset>
 
