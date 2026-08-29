@@ -145,7 +145,8 @@ export function computeListingMetrics(
   listing: HouseListing,
   comm?: Community,
   downPaymentRatio = 0.2,
-  ratePct = 3.15
+  ratePct = 3.15,
+  loanYears = 30
 ): ComputedListingMetrics {
   const unitPriceYuan = listing.buildingArea > 0 ? Math.round((listing.totalPrice * 10000) / listing.buildingArea) : 0;
   const targetUnitPriceYuan = listing.buildingArea > 0 ? Math.round((listing.targetPrice * 10000) / listing.buildingArea) : 0;
@@ -178,9 +179,9 @@ export function computeListingMetrics(
 
   // 估算月供
   const loanWuan = listing.totalPrice * (1 - downPaymentRatio);
-  const monthlyRate = ratePct / 100 / 12;
-  const totalMonths = 360;
   const principal = loanWuan * 10000;
+  const monthlyRate = ratePct / 100 / 12;
+  const totalMonths = loanYears * 12;
   const estimatedMonthlyMortgage = Math.round(
     (principal * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths))) /
     (Math.pow(1 + monthlyRate, totalMonths) - 1)

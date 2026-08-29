@@ -7,7 +7,7 @@ export const RentVsBuySection: React.FC = () => {
   const [housePrice, setHousePrice] = useState<number>(240); // 240万
   const [downPayment, setDownPayment] = useState<number>(48); // 48万
   const [mortgageRate, setMortgageRate] = useState<number>(3.15); // 3.15%
-  const [loanYears] = useState<number>(30); // 30年
+  const [loanYears, setLoanYears] = useState<number>(30); // 30年（可选20~40）
   const [monthlyRent, setMonthlyRent] = useState<number>(3800); // 3800元/月
 
   // Dynamic Simulation Parameters
@@ -119,6 +119,24 @@ export const RentVsBuySection: React.FC = () => {
                 value={mortgageRate}
                 onChange={(e) => setMortgageRate(parseFloat(e.target.value))}
               />
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '4px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>贷款期限 (年)</span>
+                <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{loanYears} 年 ({loanYears * 12}期)</span>
+              </div>
+              <input
+                type="range"
+                min={20}
+                max={40}
+                step={5}
+                value={loanYears}
+                onChange={(e) => setLoanYears(parseInt(e.target.value))}
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                最新政策最长可贷 40 年；期限越长月供越低，总利息越多
+              </span>
             </div>
 
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginTop: '12px', marginBottom: '14px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>

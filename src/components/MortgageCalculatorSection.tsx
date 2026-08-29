@@ -289,6 +289,8 @@ export const MortgageCalculatorSection: React.FC = () => {
                   <option value={20}>20 年 (240期)</option>
                   <option value={25}>25 年 (300期)</option>
                   <option value={30}>30 年 (360期)</option>
+                  <option value={35}>35 年 (420期)</option>
+                  <option value={40}>40 年 (480期)</option>
                 </select>
               </div>
 
