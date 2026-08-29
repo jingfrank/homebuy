@@ -30,6 +30,12 @@ export interface BreakEvenParams {
   vacancyMonths: number;      // 年空置月数 (0.5)
   referenceArea: number;      // 参考房源面积 (㎡)
   currentYear: number;        // 当前年份
+
+  // 公积金年冲（冲本金、不改还款年限）
+  yearOffsetEnabled: boolean;        // 是否启用年冲模拟
+  providentBalanceInitial: number;  // 公积金账户初始余额 (元)
+  providentMonthlyDeposit: number;  // 公积金月缴存额 (双方合计, 元)
+  holdYears: number;                // 持有期/年冲模拟窗口 (年)
 }
 
 export const DEFAULT_BREAKEVEN_PARAMS: BreakEvenParams = {
@@ -42,6 +48,10 @@ export const DEFAULT_BREAKEVEN_PARAMS: BreakEvenParams = {
   vacancyMonths: 0.5,
   referenceArea: 90,
   currentYear: 2026,
+  yearOffsetEnabled: false,
+  providentBalanceInitial: 100_000,
+  providentMonthlyDeposit: 3_000,
+  holdYears: 20,
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -183,8 +193,125 @@ export function getDefaultPremiumParams(comm?: {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  计算结果
+//  公积金年冲模拟（冲本金、不改还款年限）
 // ═══════════════════════════════════════════════════════════
+//
+// 逐年模型（按月迭代实现，每年初执行一次年冲）：
+//   初始贷款余额 L(0) = 房价 × 贷款比例
+//   年冲金额 A(t) = min(公积金账户余额 G(t), 剩余贷款本金 L(t))
+//   当期利息 I(t) = L(t) × 加权名义贷款利率
+//   L(t+1) = L(t) − 常规月供本金部分 − A(t)   （冲后按剩余期限重算月供，月供递减）
+//   G(t+1) = G(t) + 年缴存额 − A(t)
+//
+// 简化假设：组合贷按加权平均利率合并为单一余额口径（上海实际规则年冲
+// 仅限公积金贷款部分，此处以加权利率近似整体冲抵效应）。
+
+export interface YearOffsetSimulation {
+  avgNominalLoanCostRate: number;    // 平均名义贷款成本率 = Σ利息/窗口/房价
+  avgNoOffsetNominalRate: number;   // 同窗口无年冲对照平均费率
+  costSavingRate: number;           // 年冲节省的名义成本率 (基点差, avgNoOffset − avgWith)
+  totalInterestYuan: number;        // 持有期累计利息 (元)
+  totalNoOffsetInterestYuan: number; // 无年冲对照累计利息 (元)
+  totalOffsetYuan: number;          // 累计年冲金额 (元)
+  firstYearOffsetYuan: number;      // 首年年冲金额 (元)
+  remainingLoanEndYuan: number;     // 期末剩余贷款本金 (元)
+  monthlyPaymentFirstYuan: number;  // 首年月供 (元)
+  monthlyPaymentEndYuan: number;    // 期末月供 (元)
+  loanPayoffYear: number | null;    // 持有期内贷款还清年份
+}
+
+export function simulateLoanWithYearOffset(
+  totalPriceYuan: number,
+  weightedAnnualRate: number,
+  loanYears: number,
+  params: BreakEvenParams,
+): YearOffsetSimulation {
+  const dp = params.downPaymentRatio;
+  const r = weightedAnnualRate / 12;
+  const holdMonths = Math.max(12, params.holdYears * 12);
+  const loanTotalMonths = loanYears * 12;
+
+  const computePayment = (balance: number, remainingMonths: number): number => {
+    if (balance <= 0 || remainingMonths <= 0) return 0;
+    if (r <= 0) return balance / remainingMonths;
+    const f = Math.pow(1 + r, remainingMonths);
+    return (balance * r * f) / (f - 1);
+  };
+
+  const run = (withOffset: boolean) => {
+    let loanBalance = totalPriceYuan * (1 - dp);
+    let providentBalance = withOffset ? params.providentBalanceInitial : 0;
+    let totalInterest = 0;
+    let totalOffset = 0;
+    let firstYearOffset = 0;
+    let monthlyPayment = 0;
+    let monthlyPaymentFirst = 0;
+    let payoffYear: number | null = null;
+
+    for (let m = 1; m <= holdMonths; m++) {
+      const remainingLoanMonths = loanTotalMonths - (m - 1);
+
+      // 每年初：执行年冲 + 按剩余期限重算月供（不改还款年限 → 月供递减）
+      if ((m - 1) % 12 === 0) {
+        if (withOffset) {
+          const offset = Math.min(providentBalance, loanBalance);
+          if (offset > 0) {
+            loanBalance -= offset;
+            providentBalance -= offset;
+            totalOffset += offset;
+            if (m === 1) firstYearOffset = offset;
+          }
+        }
+        monthlyPayment = computePayment(loanBalance, remainingLoanMonths);
+        if (m === 1) monthlyPaymentFirst = monthlyPayment;
+      }
+
+      // 常规月供（等额本息按月拆分）
+      if (loanBalance > 0) {
+        const interest = loanBalance * r;
+        let principal = monthlyPayment - interest;
+        if (principal > loanBalance) principal = loanBalance;
+        if (principal < 0) principal = 0;
+        loanBalance = Math.max(0, loanBalance - principal);
+        totalInterest += interest;
+        if (loanBalance <= 0.5 && payoffYear === null) payoffYear = Math.ceil(m / 12);
+      }
+
+      // 公积金月缴存（无年冲对照不累计，账户钱不进模型）
+      if (withOffset) providentBalance += params.providentMonthlyDeposit;
+    }
+
+    return {
+      avgNominalRate: totalInterest / holdMonths / totalPriceYuan,
+      totalInterest,
+      totalOffset,
+      firstYearOffset,
+      loanBalance,
+      monthlyPaymentFirst,
+      monthlyPayment: monthlyPayment,
+      payoffYear,
+    };
+  };
+
+  const with_ = run(true);
+  const without = run(false);
+
+  return {
+    avgNominalLoanCostRate: with_.avgNominalRate,
+    avgNoOffsetNominalRate: without.avgNominalRate,
+    costSavingRate: without.avgNominalRate - with_.avgNominalRate,
+    totalInterestYuan: Math.round(with_.totalInterest),
+    totalNoOffsetInterestYuan: Math.round(without.totalInterest),
+    totalOffsetYuan: Math.round(with_.totalOffset),
+    firstYearOffsetYuan: Math.round(with_.firstYearOffset),
+    remainingLoanEndYuan: Math.round(with_.loanBalance),
+    monthlyPaymentFirstYuan: Math.round(with_.monthlyPaymentFirst),
+    monthlyPaymentEndYuan: Math.round(with_.monthlyPayment),
+    loanPayoffYear: with_.payoffYear,
+  };
+}
+
+
 
 export interface BreakEvenResult {
   // 核心底线结果
@@ -212,6 +339,10 @@ export interface BreakEvenResult {
   loanCostRate: number;         // 贷款实际成本率 = realWeightedLoanRate × (1-dpRatio)
   weightedLoanRate: number;    // 名义加权贷款年利率
   totalCostRate: number;       // 综合实际成本率
+
+  // 公积金年冲（未启用时为 null）
+  yearOffset: YearOffsetSimulation | null;
+  yearOffsetDeltaReal: number; // 年冲带来的实际贷款成本率节省 (开启时为正)
 
   // 收益端
   netMonthlyRentPerSqm: number;   // 净月租金 (元/㎡/月)
@@ -297,6 +428,44 @@ export function computeBreakEven(
     loanType = 'mixed';
   }
 
+  // ── 公积金年冲调整（不动点迭代，成本率依赖 P）──
+  // 盈亏平衡价 P 越低 → 贷款越少 → 年冲摊薄占比越大 → 成本率越低 → 反过来推高 P。
+  // 只计年冲的边际节省（同窗口有无年冲对照之差），叠加到气球口径成本率上，
+  // 保证关闭开关时结果与原模型完全一致。
+  let yearOffsetSim: YearOffsetSimulation | null = null;
+  let yearOffsetDeltaReal = 0;
+
+  if (params.yearOffsetEnabled) {
+    let P = breakEvenTotalPrice;
+    let wRate = weightedLoanRate;
+    let bestSim: YearOffsetSimulation | null = null;
+    let deltaReal = 0;
+
+    for (let iter = 0; iter < 100; iter++) {
+      const totalLoan = P * (1 - dp);
+      const provPart = Math.min(totalLoan, providentLimit);
+      const commPart = Math.max(0, totalLoan - providentLimit);
+      wRate = totalLoan > 0 ? (provPart * providentRate + commPart * commercialRate) / totalLoan : 0;
+
+      bestSim = simulateLoanWithYearOffset(P, wRate, 30, params);
+      const deltaNominal = bestSim.costSavingRate; // avgNoOffset − avgWith
+      // 名义费率差 → 实际口径：按通胀占名义利率比例折算
+      const realFactor = wRate > inflationRate ? 1 - inflationRate / wRate : 1;
+      deltaReal = deltaNominal * realFactor;
+
+      const costRate = (wRate - inflationRate) * (1 - dp) + realBondRate * dp + depreciationRate - deltaReal;
+      if (costRate <= 0) break;
+      const P_new = totalNetAnnualRent / costRate;
+      if (Math.abs(P_new - P) < 1) { P = P_new; break; }
+      P = P_new;
+    }
+
+    breakEvenTotalPrice = P;
+    weightedLoanRate = wRate;
+    yearOffsetSim = bestSim;
+    yearOffsetDeltaReal = deltaReal;
+  }
+
   const breakEvenPricePerSqm = Math.round(breakEvenTotalPrice / referenceArea);
 
   // ── 五维合理溢价与目标买入建议价计算 ──
@@ -347,10 +516,10 @@ export function computeBreakEven(
   const providentLoanAmount = Math.min(totalLoanAmount, providentLimit);
   const commercialLoanAmount = Math.max(0, totalLoanAmount - providentLimit);
 
-  // ── 成本拆解（实际利率） ──
+  // ── 成本拆解（实际利率，年冲开启时贷款成本率已扣除年冲节省） ──
   const realWeightedLoanRate = weightedLoanRate - inflationRate;
   const bondOpportunityCost = realBondRate * dp;
-  const loanCostRate = realWeightedLoanRate * (1 - dp);
+  const loanCostRate = realWeightedLoanRate * (1 - dp) - yearOffsetDeltaReal;
   const totalCostRate = bondOpportunityCost + depreciationRate + loanCostRate;
 
   // ── 对比分析 ──
@@ -401,6 +570,8 @@ export function computeBreakEven(
     loanCostRate,
     weightedLoanRate,
     totalCostRate,
+    yearOffset: yearOffsetSim,
+    yearOffsetDeltaReal,
     netMonthlyRentPerSqm: Math.round(netMonthlyRentPerSqm * 100) / 100,
     netAnnualRentPerSqm: Math.round(netAnnualRentPerSqm * 100) / 100,
     breakEvenNetRentalYield: totalCostRate,

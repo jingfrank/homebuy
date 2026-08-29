@@ -297,6 +297,58 @@ export const BreakEvenSection: React.FC = () => {
               onChange={(v) => updateParam('referenceArea', v)}
             />
           </div>
+
+          {/* ── 公积金年冲子面板 ── */}
+          <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                💰 公积金年冲（冲本金·不改年限）
+              </h4>
+              <button
+                className={`btn ${params.yearOffsetEnabled ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '5px 14px', fontSize: '0.78rem', minHeight: '32px' }}
+                onClick={() => updateParam('yearOffsetEnabled', !params.yearOffsetEnabled)}
+              >
+                {params.yearOffsetEnabled ? '✅ 已启用' : '未启用'}
+              </button>
+            </div>
+            {params.yearOffsetEnabled ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 125px), 1fr))', gap: '12px' }}>
+                  <ParamSlider
+                    label="公积金账户初始余额"
+                    value={params.providentBalanceInitial / 10000}
+                    min={0} max={50} step={1}
+                    format={(v) => `${v}万`}
+                    onChange={(v) => updateParam('providentBalanceInitial', v * 10000)}
+                  />
+                  <ParamSlider
+                    label="公积金月缴存(双方)"
+                    value={params.providentMonthlyDeposit}
+                    min={0} max={8000} step={200}
+                    format={(v) => `${v}元`}
+                    onChange={(v) => updateParam('providentMonthlyDeposit', v)}
+                  />
+                  <ParamSlider
+                    label="持有测算年限"
+                    value={params.holdYears}
+                    min={5} max={40} step={5}
+                    format={(v) => `${v}年`}
+                    onChange={(v) => updateParam('holdYears', v)}
+                  />
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '8px', lineHeight: 1.5 }}>
+                  每年用公积金账户余额一次性冲抵贷款本金，期限不变月供递减。
+                  组合贷按加权利率合并口径近似（上海实际年冲仅限公积金贷款部分）。
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: '0.76rem', color: 'var(--text-dim)', lineHeight: 1.5 }}>
+                启用后按"每年冲一次本金、贷款年限不变"模拟，贷款成本率按持有期平均利息计，
+                盈亏平衡价会上移。
+              </div>
+            )}
+          </div>
           <div style={{ marginTop: '12px', fontSize: '0.73rem', color: 'var(--text-dim)', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
             💡 首付机会成本与贷款利息均已按费雪效应扣除通胀率，反映<strong>实际持有成本</strong>；折旧率不受通胀影响。
           </div>
@@ -1082,6 +1134,37 @@ const BreakEvenCard: React.FC<{
               )}
             </div>
           </div>
+
+          {/* ── 公积金年冲模拟摘要 ── */}
+          {r.yearOffset && (
+            <div style={{
+              marginTop: '12px', padding: '14px 16px', borderRadius: 'var(--radius-sm)',
+              background: 'rgba(5, 150, 105, 0.06)', border: '1px solid rgba(5, 150, 105, 0.2)',
+              fontSize: '0.825rem',
+            }}>
+              <div style={{ fontWeight: 800, marginBottom: '8px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                💰 公积金年冲模拟（持有 {params.holdYears} 年）
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '8px' }}>
+                <YearOffsetStat label="首年月供" value={`${fmt(r.yearOffset.monthlyPaymentFirstYuan)} 元`} />
+                <YearOffsetStat label={`${params.holdYears}年后月供`} value={`${fmt(r.yearOffset.monthlyPaymentEndYuan)} 元`} highlight />
+                <YearOffsetStat label={`累计年冲本金`} value={`${fmt(r.yearOffset.totalOffsetYuan)} 元`} highlight />
+                <YearOffsetStat label="累计利息(有年冲)" value={`${fmt(r.yearOffset.totalInterestYuan)} 元`} />
+                <YearOffsetStat label="累计利息(无年冲)" value={`${fmt(r.yearOffset.totalNoOffsetInterestYuan)} 元`} />
+                <YearOffsetStat label="利息节省" value={`${fmt(r.yearOffset.totalNoOffsetInterestYuan - r.yearOffset.totalInterestYuan)} 元`} highlight />
+                {r.yearOffset.loanPayoffYear && (
+                  <YearOffsetStat label="贷款还清年份" value={`第 ${r.yearOffset.loanPayoffYear} 年`} highlight />
+                )}
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.5 }}>
+                年冲每年用公积金余额冲抵本金、期限不变月供递减。
+                实际贷款成本率节省 <strong style={{ color: 'var(--primary)' }}>{(r.yearOffsetDeltaReal * 100).toFixed(2)}%</strong>，
+                盈亏平衡价较无年冲上移约 <strong style={{ color: 'var(--primary)' }}>
+                  {fmt(Math.round(r.breakEvenPricePerSqm * r.yearOffsetDeltaReal / (r.totalCostRate || 0.001)))} 元/㎡
+                </strong>。
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1228,3 +1311,15 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = {
   padding: '10px 12px', color: 'var(--text-main)', fontSize: '0.8rem', whiteSpace: 'nowrap',
 };
+
+// 年冲模拟统计格
+const YearOffsetStat: React.FC<{ label: string; value: string; highlight?: boolean }> = ({ label, value, highlight }) => (
+  <div style={{
+    padding: '8px 10px', borderRadius: '6px',
+    background: highlight ? 'rgba(5, 150, 105, 0.08)' : '#f8fafc',
+    border: highlight ? '1px solid rgba(5,150,105,0.2)' : '1px solid var(--border-color)',
+  }}>
+    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '2px' }}>{label}</div>
+    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: highlight ? 'var(--primary)' : 'var(--text-main)' }}>{value}</div>
+  </div>
+);
