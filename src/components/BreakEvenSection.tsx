@@ -4,7 +4,6 @@ import { calculateCommunityAvgRentUnitPrice } from '../types/community';
 import {
   computeBreakEven,
   DEFAULT_BREAKEVEN_PARAMS,
-  DEPRECIATION_TIERS,
   getDefaultPremiumParams,
   LOCATION_OPTIONS,
   QUALITY_OPTIONS,
@@ -354,36 +353,66 @@ export const BreakEvenSection: React.FC = () => {
           </div>
         </div>
 
-        {/* 楼龄折旧分档参考 */}
+        {/* 楼龄 × 区位系数 二维折旧矩阵 */}
         <div className="glass-card mobile-p-14" style={{ padding: '18px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
-          <h3 style={{ fontSize: '0.98rem', fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            📐 上海楼龄物理折旧率标准
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-            {DEPRECIATION_TIERS.map((tier) => (
-              <div
-                key={tier.range}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '7px 10px',
-                  borderRadius: '6px',
-                  background: '#f8fafc',
-                  fontSize: '0.8rem',
-                }}
-              >
-                <div>
-                  <strong style={{ color: 'var(--text-main)' }}>楼龄 {tier.range}</strong>
-                </div>
-                <span style={{ fontWeight: 800, color: 'var(--primary)' }}>
-                  {tier.ratePct} / 年
-                </span>
-              </div>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+            <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              📐 楼龄 × 区位系数 二维折旧矩阵
+            </h3>
+            <span className="badge badge-success" style={{ fontSize: '0.72rem' }}>已实装土地稀缺韧性</span>
           </div>
-          <div style={{ marginTop: '12px', fontSize: '0.73rem', color: 'var(--text-dim)', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
-            📌 楼龄越大，房屋维护成本与老化损耗越高，模型将自动根据建成年份匹配折旧率计入持有成本。
+
+          <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '10px', lineHeight: 1.4 }}>
+            核心区土地价值占比达 70%+（抗衰极强，折旧打折）；远郊新城物理价值占比高，折旧磨损衰减快（折旧上浮）。
+          </div>
+
+          <div className="table-scroll-container">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.76rem', textAlign: 'center' }}>
+              <thead>
+                <tr style={{ background: '#f1f5f9', borderBottom: '1.5px solid var(--border-color)' }}>
+                  <th style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 700 }}>楼龄阶段 (基准)</th>
+                  <th style={{ padding: '6px 8px', fontWeight: 700, color: 'var(--primary)' }}>内环核心<br/><span style={{ fontSize: '0.68rem', fontWeight: 500 }}>打5.5折 (0.55x)</span></th>
+                  <th style={{ padding: '6px 8px', fontWeight: 700 }}>中内环<br/><span style={{ fontSize: '0.68rem', fontWeight: 500 }}>打8折 (0.80x)</span></th>
+                  <th style={{ padding: '6px 8px', fontWeight: 700, background: '#e2e8f0' }}>中外环标准<br/><span style={{ fontSize: '0.68rem', fontWeight: 500 }}>1.0x 基准</span></th>
+                  <th style={{ padding: '6px 8px', fontWeight: 700 }}>近郊地铁<br/><span style={{ fontSize: '0.68rem', fontWeight: 500 }}>上浮20% (1.2x)</span></th>
+                  <th style={{ padding: '6px 8px', fontWeight: 700, color: '#dc2626' }}>远郊新城<br/><span style={{ fontSize: '0.68rem', fontWeight: 500 }}>上浮45% (1.45x)</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { range: '0 ~ 5年 (次新)', base: 0.003 },
+                  { range: '5 ~ 10年 (成熟)', base: 0.007 },
+                  { range: '10 ~ 15年 (黄金)', base: 0.012 },
+                  { range: '15 ~ 20年 (老牌)', base: 0.017 },
+                  { range: '20 ~ 25年 (老龄)', base: 0.022 },
+                  { range: '25 ~ 50年 (高龄)', base: 0.027 },
+                ].map((row, rIdx) => (
+                  <tr key={row.range} style={{ borderBottom: '1px solid var(--border-color)', background: rIdx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                    <td style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 700, color: 'var(--text-main)' }}>
+                      {row.range} <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>({(row.base * 100).toFixed(1)}%)</span>
+                    </td>
+                    <td style={{ padding: '6px 8px', color: 'var(--primary)', fontWeight: 700 }}>
+                      {(row.base * 0.55 * 100).toFixed(2)}%
+                    </td>
+                    <td style={{ padding: '6px 8px', fontWeight: 600 }}>
+                      {(row.base * 0.80 * 100).toFixed(2)}%
+                    </td>
+                    <td style={{ padding: '6px 8px', fontWeight: 700, background: '#f1f5f9' }}>
+                      {(row.base * 1.00 * 100).toFixed(2)}%
+                    </td>
+                    <td style={{ padding: '6px 8px', fontWeight: 600 }}>
+                      {(row.base * 1.20 * 100).toFixed(2)}%
+                    </td>
+                    <td style={{ padding: '6px 8px', color: '#dc2626', fontWeight: 700 }}>
+                      {(row.base * 1.45 * 100).toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ marginTop: '10px', fontSize: '0.72rem', color: 'var(--text-dim)', borderTop: '1px solid var(--border-color)', paddingTop: '6px' }}>
+            📌 提示：在各小区的「五维打分器」中切换地段档位，系统会自动联动计算该小区的折旧率与合理溢价率。
           </div>
         </div>
       </div>
@@ -1065,7 +1094,11 @@ const BreakEvenCard: React.FC<{
                   detail={`实际国债利率 ${pct(params.bondRate)}−${pct(params.inflationRate)}=${pct(r.realBondRate)} × 首付${pct(params.downPaymentRatio)}`}
                   rate={r.bondOpportunityCost}
                 />
-                <CostRow label="房屋物理折旧与老化" detail={`楼龄${r.buildingAge}年 → 费率${pct(r.depreciationRate)}`} rate={r.depreciationRate} />
+                <CostRow
+                  label="房屋物理与区位折旧"
+                  detail={`楼龄${r.buildingAge}年 (基准${pct(r.baseDepreciationRate)}) × ${r.locationDepreciationLabel} → 综合折旧${pct(r.depreciationRate)}`}
+                  rate={r.depreciationRate}
+                />
                 <CostRow
                   label={r.loanType === 'mixed' ? '组合房贷实际利息成本' : '公积金贷款实际利息成本'}
                   detail={r.loanType === 'mixed'

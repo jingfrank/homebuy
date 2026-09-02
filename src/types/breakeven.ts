@@ -55,17 +55,110 @@ export const DEFAULT_BREAKEVEN_PARAMS: BreakEvenParams = {
 };
 
 // ═══════════════════════════════════════════════════════════
-//  楼龄 → 折旧率 分段表
+//  楼龄 × 区位系数 二维折旧模型 (2D Depreciation Model)
 // ═══════════════════════════════════════════════════════════
 
-export function getDepreciationRate(age: number): number {
+/**
+ * 维度一：基准楼龄物理折旧率 (纯建筑物老化损耗)
+ */
+export function getBaseDepreciationRate(age: number): number {
   if (age < 0) return 0;
-  if (age < 5) return 0.003;  // 0.3%
-  if (age < 10) return 0.007; // 0.7%
-  if (age < 15) return 0.012; // 1.2%
-  if (age < 20) return 0.017;  // 1.7%
-  if (age < 25) return 0.022;  // 2.2%
-  return 0.027;                // 25-50年 2.7%
+  if (age < 5) return 0.003;  // 0.3% / 年 (0~5年次新)
+  if (age < 10) return 0.007; // 0.7% / 年 (5~10年成熟)
+  if (age < 15) return 0.012; // 1.2% / 年 (10~15年黄金)
+  if (age < 20) return 0.017; // 1.7% / 年 (15~20年老牌)
+  if (age < 25) return 0.022; // 2.2% / 年 (20~25年老龄)
+  return 0.027;               // 2.7% / 年 (25~50年高龄)
+}
+
+/**
+ * 维度二：区位与土地稀缺韧性系数 (土地价值抗衰因子)
+ */
+export interface LocationCoefficientTier {
+  id: string;
+  name: string;
+  subLabel: string;
+  locationTierPct: number;
+  multiplier: number;
+  multiplierLabel: string;
+  landValueShare: string;
+}
+
+export const LOCATION_COEFFICIENT_TIERS: LocationCoefficientTier[] = [
+  {
+    id: 'loc_core',
+    name: '内环核心 / 顶级双轨学区',
+    subLabel: '地段稀缺不可再生，土地价值占比70%+，抗衰极强',
+    locationTierPct: 0.12,
+    multiplier: 0.55,
+    multiplierLabel: '打5.5折 (-45%)',
+    landValueShare: '75%',
+  },
+  {
+    id: 'loc_mid_inner',
+    name: '中内环产业核心 / 优质次新',
+    subLabel: '产业与高薪人口聚集，成熟抗跌',
+    locationTierPct: 0.08,
+    multiplier: 0.80,
+    multiplierLabel: '打8折 (-20%)',
+    landValueShare: '60%',
+  },
+  {
+    id: 'loc_mid_outer',
+    name: '中外环成熟便捷居住区',
+    subLabel: '配套齐全便捷，标准参照系（如三林/北蔡）',
+    locationTierPct: 0.05,
+    multiplier: 1.00,
+    multiplierLabel: '1.0x (基准)',
+    landValueShare: '50%',
+  },
+  {
+    id: 'loc_outer_metro',
+    name: '外环近郊地铁盘',
+    subLabel: '刚需外溢，土地溢价一般',
+    locationTierPct: 0.02,
+    multiplier: 1.20,
+    multiplierLabel: '上浮20% (+20%)',
+    landValueShare: '40%',
+  },
+  {
+    id: 'loc_suburb',
+    name: '外环外远郊新城 / 纯睡城',
+    subLabel: '土地支撑弱，物理老化与流动性衰减快',
+    locationTierPct: 0.00,
+    multiplier: 1.45,
+    multiplierLabel: '上浮45% (+45%)',
+    landValueShare: '25%',
+  },
+];
+
+export function getLocationDepreciationFactor(locationTierPct: number = 0.05): {
+  multiplier: number;
+  multiplierLabel: string;
+  name: string;
+} {
+  if (locationTierPct >= 0.11) {
+    return { multiplier: 0.55, multiplierLabel: '内环核心打5.5折', name: '内环核心' };
+  }
+  if (locationTierPct >= 0.075) {
+    return { multiplier: 0.80, multiplierLabel: '中内环打8折', name: '中内环' };
+  }
+  if (locationTierPct >= 0.04) {
+    return { multiplier: 1.00, multiplierLabel: '中外环标准1.0x', name: '中外环标准' };
+  }
+  if (locationTierPct >= 0.015) {
+    return { multiplier: 1.20, multiplierLabel: '近郊上浮20%', name: '近郊地铁' };
+  }
+  return { multiplier: 1.45, multiplierLabel: '远郊上浮45%', name: '远郊新城' };
+}
+
+/**
+ * 综合二维折旧率 = 基准物理折旧率 × 区位系数
+ */
+export function getDepreciationRate(age: number, locationTierPct: number = 0.05): number {
+  const baseRate = getBaseDepreciationRate(age);
+  const factor = getLocationDepreciationFactor(locationTierPct);
+  return baseRate * factor.multiplier;
 }
 
 export const DEPRECIATION_TIERS: { range: string; rate: number; ratePct: string }[] = [
@@ -331,7 +424,10 @@ export interface BreakEvenResult {
   actionVerdictText: string;
 
   // 成本端拆解（均为年化比率，已用实际利率）
-  depreciationRate: number;     // 折旧率（物理折旧，不扣通胀）
+  depreciationRate: number;     // 综合折旧率（楼龄基准 × 区位系数，物理折旧，不扣通胀）
+  baseDepreciationRate: number; // 基准物理折旧率 (纯楼龄)
+  locationDepreciationMultiplier: number; // 区位折旧系数 (0.55 ~ 1.45)
+  locationDepreciationLabel: string;   // 区位折旧标签 (如 "内环核心打5.5折")
   buildingAge: number;          // 楼龄
   realBondRate: number;         // 实际国债利率 = 名义国债利率 − 通胀
   realWeightedLoanRate: number; // 实际加权贷款利率 = 名义加权利率 − 通胀
@@ -380,8 +476,11 @@ export function computeBreakEven(
 ): BreakEvenResult | null {
   if (avgRentUnitPrice <= 0) return null;
 
+  const premiumParams: PremiumScoreParams = customPremiumParams || getDefaultPremiumParams({ builtYear });
   const buildingAge = params.currentYear - builtYear;
-  const depreciationRate = getDepreciationRate(buildingAge);
+  const baseDepreciationRate = getBaseDepreciationRate(buildingAge);
+  const locationFactor = getLocationDepreciationFactor(premiumParams.locationTierPct);
+  const depreciationRate = baseDepreciationRate * locationFactor.multiplier;
   const { referenceArea, downPaymentRatio: dp, bondRate, providentRate, commercialRate, providentLimit, inflationRate, vacancyMonths } = params;
 
   // ── 收益端：净年租金 ──
@@ -469,7 +568,6 @@ export function computeBreakEven(
   const breakEvenPricePerSqm = Math.round(breakEvenTotalPrice / referenceArea);
 
   // ── 五维合理溢价与目标买入建议价计算 ──
-  const premiumParams: PremiumScoreParams = customPremiumParams || getDefaultPremiumParams({ builtYear });
   const totalReasonablePremiumRate = Math.round(
     (
       (premiumParams.locationTierPct +
@@ -563,6 +661,9 @@ export function computeBreakEven(
     actionVerdict,
     actionVerdictText,
     depreciationRate,
+    baseDepreciationRate,
+    locationDepreciationMultiplier: locationFactor.multiplier,
+    locationDepreciationLabel: locationFactor.multiplierLabel,
     buildingAge,
     realBondRate,
     realWeightedLoanRate,
